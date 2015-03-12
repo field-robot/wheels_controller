@@ -49,23 +49,13 @@ int main(int argc, char **argv)
 	ros::Publisher send_dir_motor2 = nh.advertise<std_msgs::Bool>("direction_motor2",100);
 	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",100);
 	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",100);
-
-	ros::Subscriber<std_msgs::UInt8> sub("speed_LF", &pwm_motor1);
-	ros::Subscriber<std_msgs::UInt8> sub1("speed_RF", &pwm_motor2);
-	ros::Subscriber<std_msgs::UInt8> sub2("speed_LB", &pwm_motor3);
-	ros::Subscriber<std_msgs::UInt8> sub3("speed_RB", &pwm_motor4);
+	
+	ros::Subscriber sub = nh.subscribe("speed_LF", 1, &pwm_motor1);
+	ros::Subscriber sub1 = nh.subscribe("speed_RF", 1, &pwm_motor2);
+	ros::Subscriber sub2 = nh.subscribe("speed_LB", 1, &pwm_motor3);
+	ros::Subscriber sub3 = nh.subscribe("speed_RB", 1, &pwm_motor4);
 	
 	
-	//ros::Subscriber<std_msgs::Bool> sub4("speed_LF, pwm_motor1);
-	//ros::Subscriber<std_msgs::Bool> sub5("speed_RF, pwm_motor2);
-	//ros::Subscriber<std_msgs::Bool> sub6("speed_LB, pwm_motor3);
-	//ros::Subscriber<std_msgs::Bool> sub7("speed_RB, pwm_motor4);
-	
-	nh.subscribe(sub);
-	nh.subscribe(sub1);
-	nh.subscribe(sub2);
-	nh.subscribe(sub3);
-
 	//creating publishers for pwm value and dir value
 	ros::Rate loop_rate(10);
 	//setting loop frequency to 10Hz
