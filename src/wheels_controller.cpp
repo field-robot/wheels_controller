@@ -4,6 +4,37 @@
 
 #include <sstream>
 
+uint8_t pwmmotor1;
+uint8_t	pwmmotor2;
+uint8_t pwmmotor3;
+uint8_t pwmmotor4;
+
+//bool dir1;
+//bool dir2;
+//bool dir3;
+//bool dir4;
+
+
+void pwm_motor1( const std_msgs::UInt8& pwmvalue)
+{
+	pwmmotor1 = pwmvalue.data;
+}
+	
+void pwm_motor2( const std_msgs::UInt8& pwmvalue)
+{
+	pwmmotor2 = pwmvalue.data;
+}
+
+void pwm_motor3( const std_msgs::UInt8& pwmvalue)
+{
+	pwmmotor3 = pwmvalue.data;
+}
+
+void pwm_motor4( const std_msgs::UInt8& pwmvalue)
+{
+	pwmmotor4 = pwmvalue.data;
+}
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "wheels_controller");
@@ -18,28 +49,48 @@ int main(int argc, char **argv)
 	ros::Publisher send_dir_motor2 = nh.advertise<std_msgs::Bool>("direction_motor2",100);
 	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",100);
 	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",100);
+
+	ros::Subscriber<std_msgs::UInt8> sub("speed_LF", &pwm_motor1);
+	ros::Subscriber<std_msgs::UInt8> sub1("speed_RF", &pwm_motor2);
+	ros::Subscriber<std_msgs::UInt8> sub2("speed_LB", &pwm_motor3);
+	ros::Subscriber<std_msgs::UInt8> sub3("speed_RB", &pwm_motor4);
+	
+	
+	//ros::Subscriber<std_msgs::Bool> sub4("speed_LF, pwm_motor1);
+	//ros::Subscriber<std_msgs::Bool> sub5("speed_RF, pwm_motor2);
+	//ros::Subscriber<std_msgs::Bool> sub6("speed_LB, pwm_motor3);
+	//ros::Subscriber<std_msgs::Bool> sub7("speed_RB, pwm_motor4);
+	
+	nh.subscribe(sub);
+	nh.subscribe(sub1);
+	nh.subscribe(sub2);
+	nh.subscribe(sub3);
+
 	//creating publishers for pwm value and dir value
 	ros::Rate loop_rate(10);
 	//setting loop frequency to 10Hz
-	int count = 0;
+	//int count = 0;
 	bool direct = true;
 	while (ros::ok())
 	{
-		std_msgs::UInt8 value;
+		std_msgs::UInt8 valuemotor1;
+		std_msgs::UInt8 valuemotor2;
+		std_msgs::UInt8 valuemotor3;
+		std_msgs::UInt8 valuemotor4;
+
 		std_msgs::Bool  dir;
-		if (count == 256)
-		{	
-			count=0;
-			if (direct==true){direct = false;}
-			else {direct = true;}
-		}
 		
-		value.data = count;
+		
+		valuemotor1.data = pwmmotor1;
+		valuemotor2.data = pwmmotor2;
+		valuemotor3.data = pwmmotor3;
+		valuemotor4.data = pwmmotor4;
+
 		dir.data = direct;
-		send_pwm_motor1.publish(value);
-		send_pwm_motor2.publish(value);
-		send_pwm_motor3.publish(value);
-		send_pwm_motor4.publish(value);
+		send_pwm_motor1.publish(valuemotor1);
+		send_pwm_motor2.publish(valuemotor2);
+		send_pwm_motor3.publish(valuemotor3);
+		send_pwm_motor4.publish(valuemotor4);
 		send_dir_motor1.publish(dir);
 		send_dir_motor2.publish(dir);
 		send_dir_motor3.publish(dir);
@@ -47,7 +98,7 @@ int main(int argc, char **argv)
 		//ROS_INFO("%s", value.data);
 		ros::spinOnce();
 		loop_rate.sleep();
-		count++;
+		//count++;
 	}
 
 	return 0;
