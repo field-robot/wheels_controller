@@ -18,11 +18,13 @@ uint8_t pwmmotor4;
 void pwm_motor1( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor1 = pwmvalue.data;
+	pwmmotor3 = pwmvalue.data;
 }
 	
 void pwm_motor2( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor2 = pwmvalue.data;
+	pwmmotor4 = pwmvalue.data;
 }
 
 void pwm_motor3( const std_msgs::UInt8& pwmvalue)
@@ -41,7 +43,7 @@ int main(int argc, char **argv)
 	//initializing package
 	ros::NodeHandle nh;
 	//starting node
-	ros::Publisher send_pwm_motor1 = nh.advertise<std_msgs::UInt8>("pwm_value",100);
+	ros::Publisher send_pwm_motor1 = nh.advertise<std_msgs::UInt8>("pwm_value_motor1",100);
 	ros::Publisher send_pwm_motor2 = nh.advertise<std_msgs::UInt8>("pwm_value_motor2",100);
 	ros::Publisher send_pwm_motor3 = nh.advertise<std_msgs::UInt8>("pwm_value_motor3",100);
 	ros::Publisher send_pwm_motor4 = nh.advertise<std_msgs::UInt8>("pwm_value_motor4",100);
@@ -50,8 +52,8 @@ int main(int argc, char **argv)
 	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",100);
 	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",100);
 	
-	ros::Subscriber sub = nh.subscribe("speed_LF", 1, &pwm_motor1);
-	ros::Subscriber sub1 = nh.subscribe("speed_RF", 1, &pwm_motor2);
+	ros::Subscriber sub = nh.subscribe("key_speed_LF", 1, &pwm_motor1);
+	ros::Subscriber sub1 = nh.subscribe("key_speed_RF", 1, &pwm_motor2);
 	ros::Subscriber sub2 = nh.subscribe("speed_LB", 1, &pwm_motor3);
 	ros::Subscriber sub3 = nh.subscribe("speed_RB", 1, &pwm_motor4);
 	
