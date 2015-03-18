@@ -43,10 +43,10 @@ int main(int argc, char **argv)
 	//initializing package
 	ros::NodeHandle nh;
 	//starting node
-	ros::Publisher send_pwm_motor1 = nh.advertise<std_msgs::UInt8>("pwm_value_motor1",100);
-	ros::Publisher send_pwm_motor2 = nh.advertise<std_msgs::UInt8>("pwm_value_motor2",100);
-	ros::Publisher send_pwm_motor3 = nh.advertise<std_msgs::UInt8>("pwm_value_motor3",100);
-	ros::Publisher send_pwm_motor4 = nh.advertise<std_msgs::UInt8>("pwm_value_motor4",100);
+	ros::Publisher send_pwm_motor1 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor1",100);
+	ros::Publisher send_pwm_motor2 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor2",100);
+	ros::Publisher send_pwm_motor3 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor3",100);
+	ros::Publisher send_pwm_motor4 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor4",100);
 	ros::Publisher send_dir_motor1 = nh.advertise<std_msgs::Bool>("direction_motor1",100);
 	ros::Publisher send_dir_motor2 = nh.advertise<std_msgs::Bool>("direction_motor2",100);
 	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",100);
