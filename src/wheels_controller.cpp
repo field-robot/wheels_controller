@@ -2,8 +2,9 @@
 #include "std_msgs/UInt8.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int16.h"
-//#include "math.h"
-//#include <sstream>
+#include "std_msgs/Int32.h"
+//#include <tf/transform_broadcaster.h>
+//#include <nav_msgs/Odometry.h>
 
 #define WheelDiameter 0.150
 #define WheelSpacing 0.3302
@@ -14,9 +15,6 @@ uint8_t	pwmmotor2;
 uint8_t pwmmotor3;
 uint8_t pwmmotor4;
 
-int16_t oldticksleft;
-int16_t oldticksright;
-
 double Pos1;
 double Pos2;
 double lticksprev;
@@ -25,17 +23,18 @@ double Xprev;
 double Yprev;
 double X;
 double Y;
+double x_velocity;
+double y_velocity;
+
+
 float phi = 0.5*PI;
 float phi_prev = 0.5*PI;
-
-
-
+float phi_velocity;
 
 //bool dir1;
 //bool dir2;
 //bool dir3;
 //bool dir4;
-
 
 void pwm_motor1( const std_msgs::UInt8& pwmvalue)
 {
@@ -59,7 +58,7 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 	pwmmotor4 = pwmvalue.data;
 }
 
-void ticksLeft( const std_msgs::Int16& ticks)
+void ticksLeft( const std_msgs::Int32& ticks)
 {
 	if (ticks.data>lticksprev)
 	{
@@ -69,7 +68,7 @@ void ticksLeft( const std_msgs::Int16& ticks)
 	
 }
 
-void ticksRight( const std_msgs::Int16& ticks)
+void ticksRight( const std_msgs::Int32& ticks)
 {
 	if (ticks.data>rticksprev)
 	{
@@ -107,12 +106,18 @@ int main(int argc, char **argv)
 	//ros::Subscriber yAccGyro = nh.subscribe("yAccelaration",1, &yAcc);
 	
 	//creating publishers for pwm value and dir value
+	
+	ros::Time current_time, last_time;
+	current_time = ros::Time::now();
+	last_time = ros::Time::now();
+	
 	ros::Rate loop_rate(100);
 	//setting loop frequency to 10Hz
-	//int count = 0;
+	
 	bool direct = true;
 	while (ros::ok())
 	{
+		current_time = ros::Time::now();
 		if (abs((Pos1-Pos2))/WheelSpacing != phi_prev)
 		{
 			phi = abs(Pos1-Pos2)/WheelSpacing + phi_prev;
@@ -130,8 +135,21 @@ int main(int argc, char **argv)
 			Y= sin(phi)*0.5*WheelSpacing + Yprev;
 			Yprev = sin(phi)*0.5*WheelSpacing + Yprev;
 		}
+		x_velocity = (X-Xprev)/(current_time-last_time);
+		y_velocity = (Y-Yprev)/(current_time-last_time);
+		phi_velocity = (phi-phi_prev)/(current_time-last_time);
+		/*
+		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);   //since all odometry is 6DOF 
 		
-		
+		geometry_msgs::TransformStamped odom_trans;
+		odom_trans.header.stamp = current_time;
+		odom_trans.header.frame_id = "odom";
+		odom_trans.child_frame_id = "base_link";
+		odom_trans.transform.translation.x = X;
+		odom_trans.transform.translation.y = Y;
+		odom_trans.transform.translation.z = 0.0;
+		odom_trans.transform.rotation = odom_quat;
+		*/
 		
 		std_msgs::UInt8 valuemotor1;
 		std_msgs::UInt8 valuemotor2;
@@ -156,7 +174,10 @@ int main(int argc, char **argv)
 		send_dir_motor3.publish(dir);
 		send_dir_motor4.publish(dir);
 		//ROS_INFO("%s", value.data);
+		
 		ros::spinOnce();
+		
+		last_time = current_time;
 		loop_rate.sleep();
 		//count++;
 	}
