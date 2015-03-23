@@ -2,10 +2,12 @@
 #include "std_msgs/UInt8.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int16.h"
+//#include "math.h"
 //#include <sstream>
 
 #define WheelDiameter 0.150
 #define WheelSpacing 0.3302
+#define PI 3.1415
 
 uint8_t pwmmotor1;
 uint8_t	pwmmotor2;
@@ -17,11 +19,14 @@ int16_t oldticksright;
 
 double Pos1;
 double Pos2;
+double lticksprev;
+double rticksprev;
 double Xprev;
 double Yprev;
 double X;
 double Y;
-float phi;
+float phi = 0.5*PI;
+float phi_prev = 0.5*PI;
 
 
 
@@ -56,13 +61,21 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 
 void ticksLeft( const std_msgs::Int16& ticks)
 {
-	Pos1 = (ticks.data)/WheelDiameter;
+	if (ticks.data>lticksprev)
+	{
+		Pos1 = ticks.data/WheelDiameter;
+		lticksprev=ticks.data;
+	}
 	
 }
 
 void ticksRight( const std_msgs::Int16& ticks)
 {
-	Pos2 = (ticks.data)/WheelDiameter;
+	if (ticks.data>rticksprev)
+	{
+		Pos2 = ticks.data/WheelDiameter;
+		rticksprev=ticks.data;
+	}
 }
 
 
@@ -89,17 +102,37 @@ int main(int argc, char **argv)
 	
 	ros::Subscriber encoder_left = nh.subscribe("sendTicksLeft",1, &ticksLeft);
 	ros::Subscriber encoder_right = nh.subscribe("sendTicksRight",1, &ticksRight);
-	//ros::Subscriber zRotGyro = nh.subscribe("zRotation", &zRot);
-	//ros::Subscriber xAccGyro = nh.subscribe("xAccelaration", &xAcc);
-	//ros::Subscriber yAccGyro = nh.subscribe("yAccelaration", &yAcc);
+	//ros::Subscriber zRotGyro = nh.subscribe("zRotation",1, &zRot);
+	//ros::Subscriber xAccGyro = nh.subscribe("xAccelaration",1, &xAcc);
+	//ros::Subscriber yAccGyro = nh.subscribe("yAccelaration",1, &yAcc);
 	
 	//creating publishers for pwm value and dir value
-	ros::Rate loop_rate(10);
+	ros::Rate loop_rate(100);
 	//setting loop frequency to 10Hz
 	//int count = 0;
 	bool direct = true;
 	while (ros::ok())
 	{
+		if (abs((Pos1-Pos2))/WheelSpacing != phi_prev)
+		{
+			phi = abs(Pos1-Pos2)/WheelSpacing + phi_prev;
+			phi_prev = abs(Pos1-Pos2)/WheelSpacing + phi_prev;
+		}
+		
+		if ((0.5*WheelSpacing - cos(phi)*0.5*WheelSpacing) != Xprev)
+		{
+			X = 0.5*WheelSpacing - cos(phi)*0.5*WheelSpacing + Xprev;
+			Xprev = 0.5*WheelSpacing - cos(phi)*0.5*WheelSpacing + Xprev;
+		}
+		
+		if ((sin(phi)*0.5*WheelSpacing)!= Yprev)
+		{
+			Y= sin(phi)*0.5*WheelSpacing + Yprev;
+			Yprev = sin(phi)*0.5*WheelSpacing + Yprev;
+		}
+		
+		
+		
 		std_msgs::UInt8 valuemotor1;
 		std_msgs::UInt8 valuemotor2;
 		std_msgs::UInt8 valuemotor3;
