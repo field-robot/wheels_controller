@@ -1,13 +1,30 @@
 #include "ros/ros.h"
 #include "std_msgs/UInt8.h"
 #include "std_msgs/Bool.h"
+#include "std_msgs/Int16.h"
+//#include <sstream>
 
-#include <sstream>
+#define WheelDiameter 0.150
+#define WheelSpacing 0.3302
 
 uint8_t pwmmotor1;
 uint8_t	pwmmotor2;
 uint8_t pwmmotor3;
 uint8_t pwmmotor4;
+
+int16_t oldticksleft;
+int16_t oldticksright;
+
+double Pos1;
+double Pos2;
+double Xprev;
+double Yprev;
+double X;
+double Y;
+float phi;
+
+
+
 
 //bool dir1;
 //bool dir2;
@@ -37,6 +54,19 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 	pwmmotor4 = pwmvalue.data;
 }
 
+void ticksLeft( const std_msgs::Int16& ticks)
+{
+	Pos1 = (ticks.data)/WheelDiameter;
+	
+}
+
+void ticksRight( const std_msgs::Int16& ticks)
+{
+	Pos2 = (ticks.data)/WheelDiameter;
+}
+
+
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "wheels_controller");
@@ -57,6 +87,11 @@ int main(int argc, char **argv)
 	ros::Subscriber sub2 = nh.subscribe("speed_LB", 1, &pwm_motor3);
 	ros::Subscriber sub3 = nh.subscribe("speed_RB", 1, &pwm_motor4);
 	
+	ros::Subscriber encoder_left = nh.subscribe("sendTicksLeft",1, &ticksLeft);
+	ros::Subscriber encoder_right = nh.subscribe("sendTicksRight",1, &ticksRight);
+	//ros::Subscriber zRotGyro = nh.subscribe("zRotation", &zRot);
+	//ros::Subscriber xAccGyro = nh.subscribe("xAccelaration", &xAcc);
+	//ros::Subscriber yAccGyro = nh.subscribe("yAccelaration", &yAcc);
 	
 	//creating publishers for pwm value and dir value
 	ros::Rate loop_rate(10);
