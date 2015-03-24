@@ -6,30 +6,30 @@
 //#include <tf/transform_broadcaster.h>
 //#include <nav_msgs/Odometry.h>
 
-#define WheelDiameter 0.150
-#define WheelSpacing 0.3302
-#define PI 3.1415
+#define WheelDiameter 0.150									//defining wheel diameter in meters
+#define WheelSpacing 0.3302									//defining wheel spacing in meters
+#define PI 3.3.14159265359									//defining pi
 
-uint8_t pwmmotor1;
+uint8_t pwmmotor1;											//creating uint8_t to send to arduini
 uint8_t	pwmmotor2;
 uint8_t pwmmotor3;
 uint8_t pwmmotor4;
 
-double Pos1;
-double Pos2;
-double lticksprev;
-double rticksprev;
-double Xprev;
-double Yprev;
-double X;
-double Y;
-double x_velocity;
-double y_velocity;
+double Pos1;												//creating Pos1 which is the center of the distance between left front and back wheels
+double Pos2;												//creating Pos2 which is the center of the distance between right front and back wheels
+double lticksprev;											//creating a variable which will be the previous value of the encoders
+double rticksprev;											
+double Xprev;												//creating a variable which will be the previous x value
+double Yprev;												//creating a variable which will be the previous y value
+double X;													//creating a variable which will be the x value
+double Y;													//creating a variable which will be the y value
+double x_velocity;											//creating a variable which will be the velocity in x-direction
+double y_velocity;											//creating a variable which will be the velocity in y-direction
 
 
-float phi = 0.5*PI;
-float phi_prev = 0.5*PI;
-float phi_velocity;
+float phi = 0.5*PI;										//creating a variable whih will be the rotation on the z-axis.this will start at 90 degrees
+float phi_prev = 0;										//creating a variable which will be the previous phi value									
+float phi_velocity;										//creating a variable which will be the velocity of phi
 
 //bool dir1;
 //bool dir2;
