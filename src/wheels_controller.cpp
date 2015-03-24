@@ -39,13 +39,13 @@ float phi_velocity;										//creating a variable which will be the velocity of
 void pwm_motor1( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor1 = pwmvalue.data;
-	pwmmotor3 = pwmvalue.data;
+	
 }
 	
 void pwm_motor2( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor2 = pwmvalue.data;
-	pwmmotor4 = pwmvalue.data;
+
 }
 
 void pwm_motor3( const std_msgs::UInt8& pwmvalue)
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 		y_velocity = (Y-Yprev)/(current_time-last_time);
 		phi_velocity = (phi-phi_prev)/(current_time-last_time);
 		
-		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);   //since all odometry is 6DOF 
+		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);    
 		
 		geometry_msgs::TransformStamped odom_trans;
 		odom_trans.header.stamp = current_time;
