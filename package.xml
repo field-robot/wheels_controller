@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>wheels_controller</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>The wheels_controller package</description>
   <maintainer email="w.selten92@gmail.com">Willem</maintainer>
   <license>TODO</license>
@@ -9,9 +9,11 @@
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>tf</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>tf</run_depend>
   <export>
   </export>
 </package>

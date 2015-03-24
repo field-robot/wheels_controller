@@ -3,12 +3,12 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int16.h"
 #include "std_msgs/Int32.h"
-#include <tf/transform_broadcaster.h>
-#include <nav_msgs/Odometry.h>
+#include "tf/transform_broadcaster.h"
+#include "nav_msgs/Odometry.h"
 
 #define WheelDiameter 0.150									//defining wheel diameter in meters
 #define WheelSpacing 0.3302									//defining wheel spacing in meters
-#define PI 3.3.14159265359									//defining pi
+#define PI 3.1415								//defining pi
 
 uint8_t pwmmotor1;											//creating uint8_t to send to arduini
 uint8_t	pwmmotor2;
@@ -101,8 +101,10 @@ int main(int argc, char **argv)
 	ros::Publisher send_dir_motor2 = nh.advertise<std_msgs::Bool>("direction_motor2",100);
 	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",100);
 	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",100);
-	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);							//odometry publisher init
-	tf::TransformBroadcaster odom_broadcaster;														// tf transform broadcaster init
+	ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 50);							//odometry publisher init
+	
+	//tf::TransformBroadcaster odom_broadcaster;														// tf transform broadcaster init
+	
 	ros::Subscriber sub = nh.subscribe("key_speed_LF", 1, &pwm_motor1);
 	ros::Subscriber sub1 = nh.subscribe("key_speed_RF", 1, &pwm_motor2);
 	ros::Subscriber sub2 = nh.subscribe("speed_LB", 1, &pwm_motor3);
@@ -122,7 +124,7 @@ int main(int argc, char **argv)
 	last_time = ros::Time::now();
 	
 	ros::Rate loop_rate(100);
-	//setting loop frequency to 10Hz
+	//setting loop frequency to 100Hz
 	
 	bool direct = true;
 	while (ros::ok())
@@ -145,10 +147,10 @@ int main(int argc, char **argv)
 			Y= sin(phi)*0.5*WheelSpacing + Yprev;
 			Yprev = sin(phi)*0.5*WheelSpacing + Yprev;
 		}
-		x_velocity = (X-Xprev)/(current_time-last_time);
-		y_velocity = (Y-Yprev)/(current_time-last_time);
-		phi_velocity = (phi-phi_prev)/(current_time-last_time);
-		
+		x_velocity = (X-Xprev)/(0.01);
+		y_velocity = (Y-Yprev)/(0.01);
+		phi_velocity = (phi-phi_prev)/(0.01);
+		/*
 		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);    
 		
 		geometry_msgs::TransformStamped odom_trans;
@@ -177,7 +179,7 @@ int main(int argc, char **argv)
 		odom.twist.twist.angular.z = phi_velocity;
 		
 		odom_pub.publish(odom);
-
+		*/
 		std_msgs::UInt8 valuemotor1;
 		std_msgs::UInt8 valuemotor2;
 		std_msgs::UInt8 valuemotor3;
