@@ -1,10 +1,10 @@
-#include "ros/ros.h"
-#include "std_msgs/UInt8.h"
-#include "std_msgs/Bool.h"
-#include "std_msgs/Int16.h"
-#include "std_msgs/Int32.h"
-#include "tf/transform_broadcaster.h"
-#include "nav_msgs/Odometry.h"
+#include <ros/ros.h>
+#include <std_msgs/UInt8.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Int16.h>
+#include <std_msgs/Int32.h>
+#include <tf/transform_broadcaster.h>
+#include <nav_msgs/Odometry.h>
 
 #define WheelDiameter 0.150									//defining wheel diameter in meters
 #define WheelSpacing 0.3302									//defining wheel spacing in meters
@@ -28,10 +28,10 @@ double x_velocity;											//creating a variable which will be the velocity in
 double y_velocity;											//creating a variable which will be the velocity in y-direction
 
 
-float phi = 0.5*PI;										//creating a variable whih will be the rotation on the z-axis.this will start at 90 degrees
-float phi_prev = 0;										//creating a variable which will be the previous phi value									
-float phi_velocity;										//creating a variable which will be the velocity of 
-
+double phi = 0.5*PI;										//creating a variable whih will be the rotation on the z-axis.this will start at 90 degrees
+double phi_prev = 0;										//creating a variable which will be the previous phi value									
+double phi_velocity;										//creating a variable which will be the velocity of 
+double dt;
 //bool dir1;
 //bool dir2;
 //bool dir3;
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",100);
 	ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 50);							//odometry publisher init
 	
-	//tf::TransformBroadcaster odom_broadcaster;														// tf transform broadcaster init
+	tf::TransformBroadcaster odom_broadcaster;													// tf transform broadcaster init
 	
 	ros::Subscriber sub = nh.subscribe("key_speed_LF", 1, &pwm_motor1);
 	ros::Subscriber sub1 = nh.subscribe("key_speed_RF", 1, &pwm_motor2);
@@ -130,6 +130,7 @@ int main(int argc, char **argv)
 	while (ros::ok())
 	{
 		current_time = ros::Time::now();
+		dt = (current_time-last_time).toSec();
 		if (abs((Pos1-Pos2))/WheelSpacing != phi_prev)
 		{
 			phi = abs(Pos1-Pos2)/WheelSpacing + phi_prev;
@@ -147,10 +148,10 @@ int main(int argc, char **argv)
 			Y= sin(phi)*0.5*WheelSpacing + Yprev;
 			Yprev = sin(phi)*0.5*WheelSpacing + Yprev;
 		}
-		x_velocity = (X-Xprev)/(0.01);
-		y_velocity = (Y-Yprev)/(0.01);
-		phi_velocity = (phi-phi_prev)/(0.01);
-		/*
+		x_velocity = (X-Xprev)/dt;
+		y_velocity = (Y-Yprev)/dt;
+		phi_velocity = (phi-phi_prev)/dt;
+		
 		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);    
 		
 		geometry_msgs::TransformStamped odom_trans;
@@ -179,7 +180,7 @@ int main(int argc, char **argv)
 		odom.twist.twist.angular.z = phi_velocity;
 		
 		odom_pub.publish(odom);
-		*/
+		
 		std_msgs::UInt8 valuemotor1;
 		std_msgs::UInt8 valuemotor2;
 		std_msgs::UInt8 valuemotor3;
