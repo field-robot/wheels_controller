@@ -14,6 +14,7 @@ uint8_t pwmmotor1;											//creating uint8_t to send to arduini
 uint8_t	pwmmotor2;
 uint8_t pwmmotor3;
 uint8_t pwmmotor4;
+uint8_t errorMsg;
 
 double Pos1;												//creating Pos1 which is the center of the distance between left front and back wheels
 double Pos2;												//creating Pos2 which is the center of the distance between right front and back wheels
@@ -35,6 +36,7 @@ float phi_velocity;										//creating a variable which will be the velocity of
 //bool dir2;
 //bool dir3;
 //bool dir4;
+
 
 void pwm_motor1( const std_msgs::UInt8& pwmvalue)
 {
@@ -77,6 +79,11 @@ void ticksRight( const std_msgs::Int32& ticks)
 	}
 }
 
+void arduinoError( const std_msgs::UInt8& error)
+{
+	errorMsg = error.data;
+}
+
 
 
 int main(int argc, char **argv)
@@ -85,6 +92,7 @@ int main(int argc, char **argv)
 	//initializing package
 	ros::NodeHandle nh;
 	//starting node
+	ros::Publisher send_error = nh.advertise<std_msgs::UInt8>("arduino_error",100);
 	ros::Publisher send_pwm_motor1 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor1",100);
 	ros::Publisher send_pwm_motor2 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor2",100);
 	ros::Publisher send_pwm_motor3 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor3",100);
@@ -99,6 +107,7 @@ int main(int argc, char **argv)
 	ros::Subscriber sub1 = nh.subscribe("key_speed_RF", 1, &pwm_motor2);
 	ros::Subscriber sub2 = nh.subscribe("speed_LB", 1, &pwm_motor3);
 	ros::Subscriber sub3 = nh.subscribe("speed_RB", 1, &pwm_motor4);
+	ros::Subscriber errorArduino = nh.subscribe("arduino_error",1, &arduinoError);
 	
 	ros::Subscriber encoder_left = nh.subscribe("sendTicksLeft",1, &ticksLeft);
 	ros::Subscriber encoder_right = nh.subscribe("sendTicksRight",1, &ticksRight);
@@ -173,16 +182,18 @@ int main(int argc, char **argv)
 		std_msgs::UInt8 valuemotor2;
 		std_msgs::UInt8 valuemotor3;
 		std_msgs::UInt8 valuemotor4;
+		std_msgs::UInt8 error_message;
 
 		std_msgs::Bool  dir;
 		
-		
+		error_message.data = errorMsg;
 		valuemotor1.data = pwmmotor1;
 		valuemotor2.data = pwmmotor2;
 		valuemotor3.data = pwmmotor3;
 		valuemotor4.data = pwmmotor4;
 
 		dir.data = direct;
+		send_error.publish(error_message);
 		send_pwm_motor1.publish(valuemotor1);
 		send_pwm_motor2.publish(valuemotor2);
 		send_pwm_motor3.publish(valuemotor3);
