@@ -22,8 +22,8 @@ double lticksprev;											//creating a variable which will be the previous va
 double rticksprev;											
 double Xprev;												//creating a variable which will be the previous x value
 double Yprev;												//creating a variable which will be the previous y value
-double X;													//creating a variable which will be the x value
-double Y;													//creating a variable which will be the y value
+double X = 0;													//creating a variable which will be the x value
+double Y = 0;													//creating a variable which will be the y value
 double x_velocity;											//creating a variable which will be the velocity in x-direction
 double y_velocity;											//creating a variable which will be the velocity in y-direction
 
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 	ros::Time current_time, last_time;
 	current_time = ros::Time::now();
 	last_time = ros::Time::now();
-	
+	ROS_INFO("%s", "Wheels Controller is running...");
 	ros::Rate loop_rate(100);
 	//setting loop frequency to 100Hz
 	
