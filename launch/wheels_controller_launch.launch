@@ -1,10 +1,57 @@
 <launch>
-  <node pkg="rosserial" type="serial_node.py" name="serial_node">
+
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node">
     <param name="port" value="/dev/ttyACM0"/>
     <param name="baud" value="57600"/>
   </node>
   <node name="wheels_controller" pkg="wheels_controller" type ="wheels_controller"/>
-  <node name="keyboard_test" pkg="movement_controller' type="keyboard_test"/>
-  <node name="movement_controller pkg="movement_controller" type="movement_controller"/>
+  <node pkg="movement_controller" name="movement_controller" type="movement_controller"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find sick_tim)/urdf/example.urdf.xacro'"/><node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/><node name="sick_tim551_2050001" pkg="sick_tim" type="sick_tim551_2050001" respawn="false" output="screen"><!-- default values: --><!--
+      <param name="min_ang" type="double" value="-2.35619449019" />
+      <param name="max_ang" type="double" value="2.35619449019" />
+      <param name="intensity" type="bool" value="True" />
+      <param name="skip" type="int" value="0" />
+      <param name="frame_id" type="str" value="laser" />
+      <param name="time_offset" type="double" value="-0.001" />
+      <param name="publish_datagram" type="bool" value="False" />
+      <param name="subscribe_datagram" type="bool" value="false" />
+    --><!-- Enables TCP instead of USB connection; `hostname` is the host name or IP address of the laser scanner
+         <param name="hostname" type="string" value="192.168.1.43" />
+         <param name="port" type="string" value="2112" />
+    --></node>
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
+    <param name = "scan" value="base_scan"/>
+    <param name= "_odom_frame" value="odom"/>
+      <param name="map_update_interval" value="1.0"/>
+      <param name="maxUrange" value="16.0"/>
+      <param name="sigma" value="0.05"/>
+      <param name="kernelSize" value="1"/>
+      <param name="lstep" value="0.05"/>
+      <param name="astep" value="0.05"/>
+      <param name="iterations" value="5"/>
+      <param name="lsigma" value="0.075"/>
+      <param name="ogain" value="3.0"/>
+      <param name="lskip" value="0"/>
+      <param name="srr" value="0.1"/>
+      <param name="srt" value="0.2"/>
+      <param name="str" value="0.1"/>
+      <param name="stt" value="0.2"/>
+      <param name="linearUpdate" value="1.0"/>
+      <param name="angularUpdate" value="0.5"/>
+      <param name="temporalUpdate" value="3.0"/>
+      <param name="resampleThreshold" value="0.5"/>
+      <param name="particles" value="30"/>
+      <param name="xmin" value="-50.0"/>
+      <param name="ymin" value="-50.0"/>
+      <param name="xmax" value="50.0"/>
+      <param name="ymax" value="50.0"/>
+      <param name="delta" value="0.05"/>
+      <param name="llsamplerange" value="0.01"/>
+      <param name="llsamplestep" value="0.01"/>
+      <param name="lasamplerange" value="0.005"/>
+      <param name="lasamplestep" value="0.005"/>
+    </node>
+    <node pkg="transform_broadcasters" name="robot_tf_publisher" type="robot_tf_publisher"/>
+    
 </launch>
 
