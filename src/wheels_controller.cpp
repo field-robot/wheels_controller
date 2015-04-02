@@ -32,21 +32,21 @@ double phi = 0.5*PI;										//creating a variable whih will be the rotation on
 double phi_prev = 0;										//creating a variable which will be the previous phi value									
 double phi_velocity;										//creating a variable which will be the velocity of 
 double dt;
-//bool dir1;
-//bool dir2;
-//bool dir3;
-//bool dir4;
+bool dir_l;
+bool dir_r;
 
 
 void pwm_motor1( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor1 = pwmvalue.data;
+	pwmmotor3 = pwmvalue.data;
 	
 }
 	
 void pwm_motor2( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor2 = pwmvalue.data;
+	pwmmotor4 = pwmvalue.data;
 
 }
 
@@ -84,7 +84,15 @@ void arduinoError( const std_msgs::UInt8& error)
 	errorMsg = error.data;
 }
 
+void directionLeft( const std_msgs::Bool& dir)
+{
+	dir_l = dir.data;
+}
 
+void directionRight( const std_msgs::Bool& dir)
+{
+	dir_r = dir.data;
+}
 
 int main(int argc, char **argv)
 {
@@ -92,16 +100,16 @@ int main(int argc, char **argv)
 	//initializing package
 	ros::NodeHandle nh;
 	//starting node
-	ros::Publisher send_error = nh.advertise<std_msgs::UInt8>("arduino_error",100);
-	ros::Publisher send_pwm_motor1 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor1",100);
-	ros::Publisher send_pwm_motor2 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor2",100);
-	ros::Publisher send_pwm_motor3 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor3",100);
-	ros::Publisher send_pwm_motor4 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor4",100);
-	ros::Publisher send_dir_motor1 = nh.advertise<std_msgs::Bool>("direction_motor1",100);
-	ros::Publisher send_dir_motor2 = nh.advertise<std_msgs::Bool>("direction_motor2",100);
-	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",100);
-	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",100);
-	ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 50);							//odometry publisher init
+	ros::Publisher send_error = nh.advertise<std_msgs::UInt8>("arduino_error",1);
+	ros::Publisher send_pwm_motor1 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor1",1);
+	ros::Publisher send_pwm_motor2 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor2",1);
+	ros::Publisher send_pwm_motor3 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor3",1);
+	ros::Publisher send_pwm_motor4 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor4",1);
+	ros::Publisher send_dir_motor1 = nh.advertise<std_msgs::Bool>("direction_motor1",1);
+	ros::Publisher send_dir_motor2 = nh.advertise<std_msgs::Bool>("direction_motor2",1);
+	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",1);
+	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",1);
+	ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 200);							//odometry publisher init
 	
 	tf::TransformBroadcaster odom_broadcaster;													// tf transform broadcaster init
 	
@@ -113,6 +121,9 @@ int main(int argc, char **argv)
 	
 	ros::Subscriber encoder_left = nh.subscribe("sendTicksLeft",1, &ticksLeft);
 	ros::Subscriber encoder_right = nh.subscribe("sendTicksRight",1, &ticksRight);
+	
+	ros::Subscriber dirLeft = nh.subscribe("dir_L",1, &directionLeft);
+	ros::Subscriber dirRight = nh.subscribe("dir_R",1, &directionRight);
 	//ros::Subscriber zRotGyro = nh.subscribe("zRotation",1, &zRot);
 	//ros::Subscriber xAccGyro = nh.subscribe("xAccelaration",1, &xAcc);
 	//ros::Subscriber yAccGyro = nh.subscribe("yAccelaration",1, &yAcc);
@@ -123,7 +134,7 @@ int main(int argc, char **argv)
 	current_time = ros::Time::now();
 	last_time = ros::Time::now();
 	ROS_INFO("%s", "Wheels Controller is running...");
-	ros::Rate loop_rate(100);
+	ros::Rate loop_rate(10);
 	//setting loop frequency to 100Hz
 	
 	bool direct = true;
@@ -188,6 +199,7 @@ int main(int argc, char **argv)
 		std_msgs::UInt8 error_message;
 
 		std_msgs::Bool  dir;
+		std_msgs::Bool  dir1;
 		
 		error_message.data = errorMsg;
 		valuemotor1.data = pwmmotor1;
@@ -195,16 +207,17 @@ int main(int argc, char **argv)
 		valuemotor3.data = pwmmotor3;
 		valuemotor4.data = pwmmotor4;
 
-		dir.data = direct;
+		dir.data = dir_l;
+		dir1.data = !dir_r;
 		send_error.publish(error_message);
 		send_pwm_motor1.publish(valuemotor1);
 		send_pwm_motor2.publish(valuemotor2);
 		send_pwm_motor3.publish(valuemotor3);
 		send_pwm_motor4.publish(valuemotor4);
 		send_dir_motor1.publish(dir);
-		send_dir_motor2.publish(dir);
+		send_dir_motor2.publish(dir1);
 		send_dir_motor3.publish(dir);
-		send_dir_motor4.publish(dir);
+		send_dir_motor4.publish(dir1);
 		//ROS_INFO("%s", value.data);
 		
 		ros::spinOnce();
