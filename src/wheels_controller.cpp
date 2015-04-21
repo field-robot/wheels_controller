@@ -9,6 +9,8 @@
 #define WheelDiameter 0.150									//defining wheel diameter in meters
 #define WheelSpacing 0.3302									//defining wheel spacing in meters
 #define PI 3.1415								//defining pi
+#define pwmConversion 10
+
 
 uint8_t pwmmotor1;											//creating uint8_t to send to arduini
 uint8_t	pwmmotor2;
@@ -34,6 +36,10 @@ double phi_velocity;										//creating a variable which will be the velocity o
 double dt;
 bool dir_l;
 bool dir_r;
+
+int64_t cmdLinX;
+int64_t cmdLinY;
+int64_t cmdAngZ;
 
 
 void pwm_motor1( const std_msgs::UInt8& pwmvalue)
@@ -94,6 +100,13 @@ void directionRight( const std_msgs::Bool& dir)
 	dir_r = dir.data;
 }
 
+void cmdVel( const geometry_msgs::Twist& twist)
+{
+	cmdLinX = twist.linear.x;
+	cmdLinY = twist.linear.y;
+	cmdAngZ = twist.angular.z;
+}
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "wheels_controller");
@@ -124,6 +137,8 @@ int main(int argc, char **argv)
 	
 	ros::Subscriber dirLeft = nh.subscribe("dir_L",1, &directionLeft);
 	ros::Subscriber dirRight = nh.subscribe("dir_R",1, &directionRight);
+	
+	ros::Subscriber cmdvel = nh.subscribe("cmd_vel",1,&cmdVel);
 	//ros::Subscriber zRotGyro = nh.subscribe("zRotation",1, &zRot);
 	//ros::Subscriber xAccGyro = nh.subscribe("xAccelaration",1, &xAcc);
 	//ros::Subscriber yAccGyro = nh.subscribe("yAccelaration",1, &yAcc);
@@ -191,6 +206,22 @@ int main(int argc, char **argv)
 		odom.twist.twist.angular.z = phi_velocity;
 		
 		odom_pub.publish(odom);
+		
+		//kinematic calculations 
+		pwmmotor2 = (sqrt(cmdLinX^2+cmdLinY^2)-0.5*WheelSpacing*cmdAngZ)/(WheelDiameter*0.5);
+		if (pwmmotor2 <0){
+		pwmmotor2 *= -1;
+		dir_r = true;
+		}else dir_r = false;
+		pwmmotor4 = pwmmotor2;
+		
+		pwmmotor1 = 2*(sqrt(cmdLinX^2+cmdLinY^2))/(0.5*WheelDiameter);
+		if (pwmmotor1 <0){
+		pwmmotor1 *= -1;
+		dir_l = true;
+		}else dir_l = false;
+		pwmmotor3 = pwmmotor1;
+		//end calculations
 		
 		std_msgs::UInt8 valuemotor1;
 		std_msgs::UInt8 valuemotor2;
