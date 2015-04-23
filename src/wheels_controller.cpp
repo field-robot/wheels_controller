@@ -12,11 +12,17 @@
 #define pwmConversion 10
 
 
-uint8_t pwmmotor1;											//creating uint8_t to send to arduini
-uint8_t	pwmmotor2;
-uint8_t pwmmotor3;
-uint8_t pwmmotor4;
+uint8_t pwmmotor1=1;											//creating uint8_t to send to arduini
+uint8_t	pwmmotor2=1;
+uint8_t pwmmotor3=1;
+uint8_t pwmmotor4=1;
 uint8_t errorMsg;
+
+uint8_t pwm_m1_prev;
+uint8_t pwm_m2_prev;
+uint8_t pwm_m3_prev;
+uint8_t pwm_m4_prev;
+
 
 double Pos1;												//creating Pos1 which is the center of the distance between left front and back wheels
 double Pos2;												//creating Pos2 which is the center of the distance between right front and back wheels
@@ -34,8 +40,11 @@ double phi = 0.5*PI;										//creating a variable whih will be the rotation on
 double phi_prev = 0;										//creating a variable which will be the previous phi value									
 double phi_velocity;										//creating a variable which will be the velocity of 
 double dt;
-bool dir_l;
-bool dir_r;
+bool dir_l = true;
+bool dir_r = false;
+
+bool dir_l_prev= false;
+bool dir_r_prev= true;
 
 int64_t cmdLinX;
 int64_t cmdLinY;
@@ -70,7 +79,7 @@ void ticksLeft( const std_msgs::Int32& ticks)
 {
 	if (ticks.data>lticksprev)
 	{
-		Pos1 = ticks.data/WheelDiameter;
+		Pos1 = abs(ticks.data/WheelDiameter);
 		lticksprev=ticks.data;
 	}
 	
@@ -80,7 +89,7 @@ void ticksRight( const std_msgs::Int32& ticks)
 {
 	if (ticks.data>rticksprev)
 	{
-		Pos2 = ticks.data/WheelDiameter;
+		Pos2 = abs(ticks.data/WheelDiameter);
 		rticksprev=ticks.data;
 	}
 }
@@ -113,7 +122,7 @@ int main(int argc, char **argv)
 	//initializing package
 	ros::NodeHandle nh;
 	//starting node
-	ros::Publisher send_error = nh.advertise<std_msgs::UInt8>("arduino_error",1);
+	//ros::Publisher send_error = nh.advertise<std_msgs::UInt8>("arduino_error",1);
 	ros::Publisher send_pwm_motor1 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor1",1);
 	ros::Publisher send_pwm_motor2 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor2",1);
 	ros::Publisher send_pwm_motor3 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor3",1);
@@ -150,17 +159,18 @@ int main(int argc, char **argv)
 	last_time = ros::Time::now();
 	ROS_INFO("%s", "Wheels Controller is running...");
 	ros::Rate loop_rate(10);
-	//setting loop frequency to 100Hz
+	//setting loop frequency to 10Hz
 	
 	bool direct = true;
 	while (ros::ok())
 	{
+		//calculating odometry of the robot
 		current_time = ros::Time::now();
 		dt = (current_time-last_time).toSec();
-		if (abs((Pos1-Pos2))/WheelSpacing != phi_prev)
+		if ((Pos1-Pos2)/WheelSpacing != phi_prev)
 		{
-			phi = abs(Pos1-Pos2)/WheelSpacing + phi_prev;
-			phi_prev = abs(Pos1-Pos2)/WheelSpacing + phi_prev;
+			phi = (Pos1-Pos2)/WheelSpacing + phi_prev;
+			phi_prev = (Pos1-Pos2)/WheelSpacing + phi_prev;
 		}
 		
 		if ((0.5*WheelSpacing - cos(phi)*0.5*WheelSpacing) != Xprev)
@@ -177,7 +187,8 @@ int main(int argc, char **argv)
 		x_velocity = (X-Xprev)/dt;
 		y_velocity = (Y-Yprev)/dt;
 		phi_velocity = (phi-phi_prev)/dt;
-		
+		//end of calculations of odometry
+		//creating an odometry message
 		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);    
 		
 		geometry_msgs::TransformStamped odom_trans;
@@ -206,8 +217,9 @@ int main(int argc, char **argv)
 		odom.twist.twist.angular.z = phi_velocity;
 		
 		odom_pub.publish(odom);
-		
+		//end of odometry message
 		//kinematic calculations 
+        /*
 		pwmmotor2 = (sqrt(cmdLinX^2+cmdLinY^2)-0.5*WheelSpacing*cmdAngZ)/(WheelDiameter*0.5);
 		if (pwmmotor2 <0){
 		pwmmotor2 *= -1;
@@ -220,42 +232,78 @@ int main(int argc, char **argv)
 		pwmmotor1 *= -1;
 		dir_l = true;
 		}else dir_l = false;
-		pwmmotor3 = pwmmotor1;
+        pwmmotor3 = pwmmotor1;*/
 		//end calculations
+		//creating variables to send/receive
 		
-		std_msgs::UInt8 valuemotor1;
-		std_msgs::UInt8 valuemotor2;
-		std_msgs::UInt8 valuemotor3;
-		std_msgs::UInt8 valuemotor4;
-		std_msgs::UInt8 error_message;
-
-		std_msgs::Bool  dir;
-		std_msgs::Bool  dir1;
 		
-		error_message.data = errorMsg;
-		valuemotor1.data = pwmmotor1;
-		valuemotor2.data = pwmmotor2;
-		valuemotor3.data = pwmmotor3;
-		valuemotor4.data = pwmmotor4;
+		
+		
+		//std_msgs::UInt8 error_message;
+		//error_message.data = errorMsg;
+		
+		
+		
+		
 
-		dir.data = dir_l;
-		dir1.data = !dir_r;
-		send_error.publish(error_message);
-		send_pwm_motor1.publish(valuemotor1);
-		send_pwm_motor2.publish(valuemotor2);
-		send_pwm_motor3.publish(valuemotor3);
-		send_pwm_motor4.publish(valuemotor4);
-		send_dir_motor1.publish(dir);
-		send_dir_motor2.publish(dir1);
-		send_dir_motor3.publish(dir);
-		send_dir_motor4.publish(dir1);
-		//ROS_INFO("%s", value.data);
+		
+		
+		//end of variables declaration
+		//publishing statements
+		//send_error.publish(error_message);
+		if (pwmmotor1 != pwm_m1_prev)
+		{
+			std_msgs::UInt8 valuemotor1;
+			valuemotor1.data = pwmmotor1;
+			send_pwm_motor1.publish(valuemotor1);
+			pwm_m1_prev = pwmmotor1;
+		}
+		if (pwmmotor2 != pwm_m2_prev)
+		{
+			std_msgs::UInt8 valuemotor2;
+			valuemotor2.data = pwmmotor2;
+			send_pwm_motor2.publish(valuemotor2);
+			pwm_m2_prev = pwmmotor2;
+		}
+		if (pwmmotor3 != pwm_m3_prev)
+		{
+			std_msgs::UInt8 valuemotor3;
+			valuemotor3.data = pwmmotor3;
+			send_pwm_motor3.publish(valuemotor3);
+			pwm_m3_prev = pwmmotor3;
+		}
+		if (pwmmotor4 != pwm_m4_prev)
+		{
+			std_msgs::UInt8 valuemotor4;
+			valuemotor4.data = pwmmotor4;
+			send_pwm_motor4.publish(valuemotor4);
+			pwm_m4_prev = pwmmotor4;
+		}
+		if (dir_l != dir_l_prev)
+		{
+			std_msgs::Bool  dir;
+			dir.data = dir_l;
+			send_dir_motor1.publish(dir);
+            send_dir_motor3.publish(dir);
+			dir_l_prev = dir_l;
+		}
+		if (dir_r != dir_r_prev)
+		{
+			std_msgs::Bool  dir1;
+			dir1.data = !dir_r;
+			send_dir_motor2.publish(dir1);
+            send_dir_motor4.publish(dir1);
+			dir_r_prev = dir_r;
+		}
+
+
+		//end of publishing statements
 		
 		ros::spinOnce();
 		
 		last_time = current_time;
 		loop_rate.sleep();
-		//count++;
+		
 	}
 
 	return 0;

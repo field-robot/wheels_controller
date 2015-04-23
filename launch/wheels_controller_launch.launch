@@ -1,7 +1,8 @@
 <launch>
-
   
-  <node name="wheels_controller" pkg="wheels_controller" type ="wheels_controller"/>
+ 
+  
+  
   
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find sick_tim)/urdf/example.urdf.xacro'" />
     
@@ -54,7 +55,7 @@
       <param name="lasamplestep" value="0.005"/>
     </node>
     <node pkg="transform_broadcasters" name="robot_tf_publisher" type="robot_tf_publisher"/>
-      
+     
   
 
 </launch>
