@@ -3,6 +3,8 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Int64.h>
+#include <std_msgs/Float32.h>
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
 
@@ -24,19 +26,19 @@ uint8_t pwm_m3_prev;
 uint8_t pwm_m4_prev;
 
 
-double Pos1;												//creating Pos1 which is the center of the distance between left front and back wheels
-double Pos2;												//creating Pos2 which is the center of the distance between right front and back wheels
+double Pos1 =0;												//creating Pos1 which is the center of the distance between left front and back wheels
+double Pos2=0;												//creating Pos2 which is the center of the distance between right front and back wheels
 double lticksprev;											//creating a variable which will be the previous value of the encoders
 double rticksprev;											
 double Xprev;												//creating a variable which will be the previous x value
 double Yprev;												//creating a variable which will be the previous y value
 double X = 0;													//creating a variable which will be the x value
 double Y = 0;													//creating a variable which will be the y value
-double x_velocity;											//creating a variable which will be the velocity in x-direction
-double y_velocity;											//creating a variable which will be the velocity in y-direction
+double x_velocity =0;											//creating a variable which will be the velocity in x-direction
+double y_velocity =0;											//creating a variable which will be the velocity in y-direction
 
 
-double phi = 0.5*PI;										//creating a variable whih will be the rotation on the z-axis.this will start at 90 degrees
+double phi = 0;										//creating a variable whih will be the rotation on the z-axis.this will start at 90 degrees
 double phi_prev = 0;										//creating a variable which will be the previous phi value									
 double phi_velocity;										//creating a variable which will be the velocity of 
 double dt;
@@ -75,23 +77,17 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 	pwmmotor4 = pwmvalue.data;
 }
 
-void ticksLeft( const std_msgs::Int32& ticks)
-{
-	if (ticks.data>lticksprev)
-	{
-		Pos1 = abs(ticks.data/WheelDiameter);
-		lticksprev=ticks.data;
-	}
-	
+void ticksLeft( const std_msgs::Float32& ticks)
+{    
+    Pos1 = ticks.data*(WheelDiameter*PI)/10*20;
+    ROS_INFO("Speed left: %f ",ticks.data);
+    
 }
 
-void ticksRight( const std_msgs::Int32& ticks)
-{
-	if (ticks.data>rticksprev)
-	{
-		Pos2 = abs(ticks.data/WheelDiameter);
-		rticksprev=ticks.data;
-	}
+void ticksRight( const std_msgs::Float32& ticks1)
+{	
+    Pos2 = ticks1.data*(WheelDiameter*PI)/10*20;
+    ROS_INFO("Speed right: %f ",ticks1.data);
 }
 
 void arduinoError( const std_msgs::UInt8& error)
@@ -115,6 +111,7 @@ void cmdVel( const geometry_msgs::Twist& twist)
 	cmdLinY = twist.linear.y;
 	cmdAngZ = twist.angular.z;
 }
+
 
 int main(int argc, char **argv)
 {
@@ -141,13 +138,15 @@ int main(int argc, char **argv)
 	ros::Subscriber sub3 = nh.subscribe("speed_RB", 1, &pwm_motor4);
 	ros::Subscriber errorArduino = nh.subscribe("arduino_error",1, &arduinoError);
 	
-	ros::Subscriber encoder_left = nh.subscribe("sendTicksLeft",1, &ticksLeft);
-	ros::Subscriber encoder_right = nh.subscribe("sendTicksRight",1, &ticksRight);
+    ros::Subscriber encoder_left = nh.subscribe("pub_speed_left",1, &ticksLeft);
+    ros::Subscriber encoder_right = nh.subscribe("pub_speed_right",1, &ticksRight);
 	
 	ros::Subscriber dirLeft = nh.subscribe("dir_L",1, &directionLeft);
 	ros::Subscriber dirRight = nh.subscribe("dir_R",1, &directionRight);
 	
 	ros::Subscriber cmdvel = nh.subscribe("cmd_vel",1,&cmdVel);
+
+
 	//ros::Subscriber zRotGyro = nh.subscribe("zRotation",1, &zRot);
 	//ros::Subscriber xAccGyro = nh.subscribe("xAccelaration",1, &xAcc);
 	//ros::Subscriber yAccGyro = nh.subscribe("yAccelaration",1, &yAcc);
@@ -161,35 +160,34 @@ int main(int argc, char **argv)
 	ros::Rate loop_rate(10);
 	//setting loop frequency to 10Hz
 	
-	bool direct = true;
+    bool direct = true;
 	while (ros::ok())
 	{
 		//calculating odometry of the robot
-		current_time = ros::Time::now();
-		dt = (current_time-last_time).toSec();
-		if ((Pos1-Pos2)/WheelSpacing != phi_prev)
-		{
-			phi = (Pos1-Pos2)/WheelSpacing + phi_prev;
-			phi_prev = (Pos1-Pos2)/WheelSpacing + phi_prev;
-		}
 		
-		if ((0.5*WheelSpacing - cos(phi)*0.5*WheelSpacing) != Xprev)
-		{
-			X = 0.5*WheelSpacing - cos(phi)*0.5*WheelSpacing + Xprev;
-			Xprev = 0.5*WheelSpacing - cos(phi)*0.5*WheelSpacing + Xprev;
-		}
+		//if ((Pos1-Pos2)/(2*WheelSpacing) != phi_prev)
+		//{
+			phi = (Pos1-Pos2)/(2*WheelSpacing)+phi_prev;
+			phi_prev = (Pos1-Pos2)/(2*WheelSpacing)+phi_prev;
+		//}
 		
-		if ((sin(phi)*0.5*WheelSpacing)!= Yprev)
-		{
-			Y= sin(phi)*0.5*WheelSpacing + Yprev;
-			Yprev = sin(phi)*0.5*WheelSpacing + Yprev;
-		}
-		x_velocity = (X-Xprev)/dt;
-		y_velocity = (Y-Yprev)/dt;
-		phi_velocity = (phi-phi_prev)/dt;
+		//if ((Pos1+Pos2)/2*sin(phi) != Xprev)
+		//{
+			X = (Pos1+Pos2)/2*sin(phi)+Xprev;
+			Xprev = (Pos1+Pos2)/2*sin(phi)+Xprev;
+		//}
+		
+		//if ((-(Pos1+Pos2)/2)*cos(phi)!= Yprev)
+		//{
+			Y= -((Pos1+Pos2)/2)*cos(phi)+Yprev;
+			Yprev = -((Pos1+Pos2)/2)*cos(phi)+Yprev;
+		//}
+		x_velocity = (Pos1+Pos2)/2*cos(phi);
+		y_velocity = (Pos1+Pos2)/2*sin(phi);
+		phi_velocity = (Pos1-Pos2)/(2*WheelSpacing);
 		//end of calculations of odometry
 		//creating an odometry message
-		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);    
+		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(-0.5*PI+phi);    
 		
 		geometry_msgs::TransformStamped odom_trans;
 		odom_trans.header.stamp = current_time;
@@ -240,14 +238,14 @@ int main(int argc, char **argv)
 		
 		
 		//std_msgs::UInt8 error_message;
-		//error_message.data = errorMsg;
+        //error_message.data = errorMsg;(
 		
 		
 		
 		
 
 		
-		
+         
 		//end of variables declaration
 		//publishing statements
 		//send_error.publish(error_message);
@@ -296,7 +294,7 @@ int main(int argc, char **argv)
 			dir_r_prev = dir_r;
 		}
 
-
+		
 		//end of publishing statements
 		
 		ros::spinOnce();
