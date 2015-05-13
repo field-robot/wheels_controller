@@ -57,6 +57,8 @@ void pwm_motor1( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor1 = pwmvalue.data;
 	pwmmotor3 = pwmvalue.data;
+	Pos1 = (pwmvalue.data/2)*(WheelDiameter*PI)/10; //based on pwm value
+    
 	
 }
 	
@@ -64,6 +66,8 @@ void pwm_motor2( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor2 = pwmvalue.data;
 	pwmmotor4 = pwmvalue.data;
+	Pos2 = (pwmvalue.data/2)*(WheelDiameter*PI)/10; //#pwm value
+    
 
 }
 
@@ -79,14 +83,14 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 
 void ticksLeft( const std_msgs::Float32& ticks)
 {    
-    Pos1 = ticks.data*(WheelDiameter*PI)/10*20;
+    //Pos1 = ticks.data*(WheelDiameter*PI)/10*20; //based on encoder value
     ROS_INFO("Speed left: %f ",ticks.data);
     
 }
 
 void ticksRight( const std_msgs::Float32& ticks1)
 {	
-    Pos2 = ticks1.data*(WheelDiameter*PI)/10*20;
+   // Pos2 = ticks1.data*(WheelDiameter*PI)/10*20; //based on encoder value
     ROS_INFO("Speed right: %f ",ticks1.data);
 }
 

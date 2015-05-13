@@ -14,8 +14,7 @@
       <param name="time_offset" type="double" value="-0.001" />
       <param name="publish_datagram" type="bool" value="False" />
       <param name="subscribe_datagram" type="bool" value="false" />
-      <param name="hostname" type="string" value="192.168.1.107" />
-      <param name="port" type="string" value="2112" />
+      
     </node>
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
     <param name = "scan" value="base_scan"/>
@@ -51,12 +50,7 @@
       <param name="lasamplestep" value="0.005"/>
     </node>
     <node pkg="transform_broadcasters" name="robot_tf_publisher" type="robot_tf_publisher"/>
-    <node pkg="amcl" name="amcl" type="amcl" output="screen">
-       <param name="use_map_topic" value="true"/>
-       <param name ="initial_pose_x" value = "0.00"/>
-       <param name ="initial_pose_y" value = "0.00"/>
-       <param name ="initial_pose_a" value = "1.57"/>
-       </node>
+   
        
   
 
