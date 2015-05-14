@@ -57,7 +57,7 @@ void pwm_motor1( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor1 = pwmvalue.data;
 	pwmmotor3 = pwmvalue.data;
-	Pos1 = (pwmvalue.data/2)*(WheelDiameter*PI)/10; //based on pwm value
+	Pos1 = (pwmvalue.data/2)*(WheelDiameter*PI)/20; //based on pwm value
     
 	
 }
@@ -66,7 +66,7 @@ void pwm_motor2( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor2 = pwmvalue.data;
 	pwmmotor4 = pwmvalue.data;
-	Pos2 = (pwmvalue.data/2)*(WheelDiameter*PI)/10; //#pwm value
+	Pos2 = (pwmvalue.data/2)*(WheelDiameter*PI)/20; //#pwm value
     
 
 }
@@ -102,11 +102,13 @@ void arduinoError( const std_msgs::UInt8& error)
 void directionLeft( const std_msgs::Bool& dir)
 {
 	dir_l = dir.data;
+	if (dir.data == false) Pos1*=-1;
 }
 
 void directionRight( const std_msgs::Bool& dir)
 {
 	dir_r = dir.data;
+	if (dir.data == false) Pos2*=-1;
 }
 
 void cmdVel( const geometry_msgs::Twist& twist)
@@ -158,7 +160,6 @@ int main(int argc, char **argv)
 	//creating publishers for pwm value and dir value
 	
 	ros::Time current_time, last_time;
-	current_time = ros::Time::now();
 	last_time = ros::Time::now();
 	ROS_INFO("%s", "Wheels Controller is running...");
 	ros::Rate loop_rate(10);
@@ -167,6 +168,8 @@ int main(int argc, char **argv)
     bool direct = true;
 	while (ros::ok())
 	{
+        current_time = ros::Time::now();
+
 		//calculating odometry of the robot
 		
 		//if ((Pos1-Pos2)/(2*WheelSpacing) != phi_prev)
