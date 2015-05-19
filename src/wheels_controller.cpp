@@ -48,6 +48,8 @@ bool dir_r = false;
 bool dir_l_prev= false;
 bool dir_r_prev= true;
 
+bool autonomeus_drive = false;
+
 int64_t cmdLinX;
 int64_t cmdLinY;
 int64_t cmdAngZ;
@@ -118,6 +120,11 @@ void cmdVel( const geometry_msgs::Twist& twist)
 	cmdAngZ = twist.angular.z;
 }
 
+void SwitchState(const std_msgs::Bool& button)
+{
+	autonomeus_drive = button.data;
+}
+
 
 int main(int argc, char **argv)
 {
@@ -151,6 +158,8 @@ int main(int argc, char **argv)
 	ros::Subscriber dirRight = nh.subscribe("dir_R",1, &directionRight);
 	
 	ros::Subscriber cmdvel = nh.subscribe("cmd_vel",1,&cmdVel);
+	
+	ros::Subscriber autonomeus = nh.subscribe("switching",1,&SwitchState);
 
 
 	//ros::Subscriber zRotGyro = nh.subscribe("zRotation",1, &zRot);
@@ -224,7 +233,8 @@ int main(int argc, char **argv)
 		odom_pub.publish(odom);
 		//end of odometry message
 		//kinematic calculations 
-        /*
+        if (autonomeus_drive == true)
+        {
 		pwmmotor2 = (sqrt(cmdLinX^2+cmdLinY^2)-0.5*WheelSpacing*cmdAngZ)/(WheelDiameter*0.5);
 		if (pwmmotor2 <0){
 		pwmmotor2 *= -1;
@@ -237,7 +247,8 @@ int main(int argc, char **argv)
 		pwmmotor1 *= -1;
 		dir_l = true;
 		}else dir_l = false;
-        pwmmotor3 = pwmmotor1;*/
+        pwmmotor3 = pwmmotor1;
+        }
 		//end calculations
 		//creating variables to send/receive
 		
