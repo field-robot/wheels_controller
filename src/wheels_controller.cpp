@@ -14,7 +14,7 @@
 #define pwmConversion 10
 
 
-uint8_t pwmmotor1=1;											//creating uint8_t to send to arduini
+uint8_t pwmmotor1=1;											//creating uint8_t to send to arduino
 uint8_t	pwmmotor2=1;
 uint8_t pwmmotor3=1;
 uint8_t pwmmotor4=1;
@@ -59,7 +59,7 @@ void pwm_motor1( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor1 = pwmvalue.data;
 	pwmmotor3 = pwmvalue.data;
-	Pos1 = (pwmvalue.data/2)*(WheelDiameter*PI)/20; //based on pwm value
+	//Pos1 = (pwmvalue.data/2)*(WheelDiameter*PI)/20; //based on pwm value
     
 	
 }
@@ -68,7 +68,7 @@ void pwm_motor2( const std_msgs::UInt8& pwmvalue)
 {
 	pwmmotor2 = pwmvalue.data;
 	pwmmotor4 = pwmvalue.data;
-	Pos2 = (pwmvalue.data/2)*(WheelDiameter*PI)/20; //#pwm value
+	//Pos2 = (pwmvalue.data/2)*(WheelDiameter*PI)/20; //#pwm value
     
 
 }
@@ -85,15 +85,15 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 
 void ticksLeft( const std_msgs::Float32& ticks)
 {    
-    //Pos1 = ticks.data*(WheelDiameter*PI)/10*20; //based on encoder value
+    Pos1 = ticks.data*(WheelDiameter*PI)/39*20; //based on encoder value
     ROS_INFO("Speed left: %f ",ticks.data);
     
 }
 
 void ticksRight( const std_msgs::Float32& ticks1)
 {	
-   // Pos2 = ticks1.data*(WheelDiameter*PI)/10*20; //based on encoder value
-    ROS_INFO("Speed right: %f ",ticks1.data);
+   Pos2 = ticks1.data*(WheelDiameter*PI)/39*20; //based on encoder value
+   ROS_INFO("Speed right: %f ",ticks1.data);
 }
 
 void arduinoError( const std_msgs::UInt8& error)
@@ -104,13 +104,13 @@ void arduinoError( const std_msgs::UInt8& error)
 void directionLeft( const std_msgs::Bool& dir)
 {
 	dir_l = dir.data;
-	if (dir.data == false) Pos1*=-1;
+	if (dir.data == true) Pos1*=-1;
 }
 
 void directionRight( const std_msgs::Bool& dir)
 {
 	dir_r = dir.data;
-	if (dir.data == false) Pos2*=-1;
+	if (dir.data == true) Pos2*=-1;
 }
 
 void cmdVel( const geometry_msgs::Twist& twist)
@@ -120,9 +120,17 @@ void cmdVel( const geometry_msgs::Twist& twist)
 	cmdAngZ = twist.angular.z;
 }
 
-void SwitchState(const std_msgs::Bool& button)
+void SwitchState(const std_msgs::UInt8& button)
 {
-	autonomeus_drive = button.data;
+	if (button.data == 1)
+	{
+	autonomeus_drive = true;
+	}
+	if (button.data == 0)
+	{
+	autonomeus_drive = false;
+	}
+	ROS_INFO("Button State: %i ",button.data);
 }
 
 
@@ -233,8 +241,8 @@ int main(int argc, char **argv)
 		odom_pub.publish(odom);
 		//end of odometry message
 		//kinematic calculations 
-        if (autonomeus_drive == true)
-        {
+       // if (autonomeus_drive == true)
+        //{
 		pwmmotor2 = (sqrt(cmdLinX^2+cmdLinY^2)-0.5*WheelSpacing*cmdAngZ)/(WheelDiameter*0.5);
 		if (pwmmotor2 <0){
 		pwmmotor2 *= -1;
@@ -248,7 +256,7 @@ int main(int argc, char **argv)
 		dir_l = true;
 		}else dir_l = false;
         pwmmotor3 = pwmmotor1;
-        }
+        //}
 		//end calculations
 		//creating variables to send/receive
 		
