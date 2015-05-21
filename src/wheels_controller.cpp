@@ -12,7 +12,7 @@
 #define WheelSpacing 0.3302									//defining wheel spacing in meters
 #define PI 3.1415								//defining pi
 #define pwmConversion 10
-
+#define motorDeadzone 50
 
 uint8_t pwmmotor1=1;											//creating uint8_t to send to arduino
 uint8_t	pwmmotor2=1;
@@ -50,9 +50,9 @@ bool dir_r_prev= true;
 
 bool autonomeus_drive = false;
 
-int64_t cmdLinX;
-int64_t cmdLinY;
-int64_t cmdAngZ;
+float cmdLinX;
+float cmdLinY;
+float cmdAngZ;
 
 
 void pwm_motor1( const std_msgs::UInt8& pwmvalue)
@@ -85,15 +85,15 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 
 void ticksLeft( const std_msgs::Float32& ticks)
 {    
-    Pos1 = ticks.data*(WheelDiameter*PI)/39*20; //based on encoder value
-    ROS_INFO("Speed left: %f ",ticks.data);
+    Pos1 = -1*(ticks.data*(WheelDiameter*PI)/39*20); //based on encoder value
+    //ROS_INFO("Speed left: %f ",ticks.data);
     
 }
 
 void ticksRight( const std_msgs::Float32& ticks1)
 {	
-   Pos2 = ticks1.data*(WheelDiameter*PI)/39*20; //based on encoder value
-   ROS_INFO("Speed right: %f ",ticks1.data);
+   Pos2 = -1*(ticks1.data*(WheelDiameter*PI)/39*20); //based on encoder value
+   //ROS_INFO("Speed right: %f ",ticks1.data);
 }
 
 void arduinoError( const std_msgs::UInt8& error)
@@ -118,6 +118,7 @@ void cmdVel( const geometry_msgs::Twist& twist)
 	cmdLinX = twist.linear.x;
 	cmdLinY = twist.linear.y;
 	cmdAngZ = twist.angular.z;
+	
 }
 
 void SwitchState(const std_msgs::UInt8& button)
@@ -243,19 +244,30 @@ int main(int argc, char **argv)
 		//kinematic calculations 
        // if (autonomeus_drive == true)
         //{
-		pwmmotor2 = (sqrt(cmdLinX^2+cmdLinY^2)-0.5*WheelSpacing*cmdAngZ)/(WheelDiameter*0.5);
+		pwmmotor2 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)-0.5*WheelSpacing*cmdAngZ)/(WheelDiameter*0.5);
 		if (pwmmotor2 <0){
 		pwmmotor2 *= -1;
+		pwmmotor2 += motorDeadzone;
 		dir_r = true;
 		}else dir_r = false;
+		pwmmotor2 += motorDeadzone;
 		pwmmotor4 = pwmmotor2;
 		
-		pwmmotor1 = 2*(sqrt(cmdLinX^2+cmdLinY^2))/(0.5*WheelDiameter);
+		pwmmotor1 = 2*(sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY))/(0.5*WheelDiameter);
 		if (pwmmotor1 <0){
 		pwmmotor1 *= -1;
+		pwmmotor1 += motorDeadzone;
 		dir_l = true;
 		}else dir_l = false;
+		pwmmotor1 += motorDeadzone;
         pwmmotor3 = pwmmotor1;
+        if (cmdLinX == 0 && cmdLinY == 0 && cmdAngZ == 0)
+		{
+			pwmmotor1 = 0;
+			pwmmotor2 = 0;
+			pwmmotor3 = 0;
+			pwmmotor4 = 0;
+		}
         //}
 		//end calculations
 		//creating variables to send/receive
@@ -303,22 +315,20 @@ int main(int argc, char **argv)
 			send_pwm_motor4.publish(valuemotor4);
 			pwm_m4_prev = pwmmotor4;
 		}
-		if (dir_l != dir_l_prev)
-		{
+		
 			std_msgs::Bool  dir;
 			dir.data = dir_l;
 			send_dir_motor1.publish(dir);
             send_dir_motor3.publish(dir);
 			dir_l_prev = dir_l;
-		}
-		if (dir_r != dir_r_prev)
-		{
+		
+		
 			std_msgs::Bool  dir1;
 			dir1.data = !dir_r;
 			send_dir_motor2.publish(dir1);
             send_dir_motor4.publish(dir1);
 			dir_r_prev = dir_r;
-		}
+		
 
 		
 		//end of publishing statements
