@@ -11,7 +11,7 @@
 #define WheelDiameter 0.150									//defining wheel diameter in meters
 #define WheelSpacing 0.3302									//defining wheel spacing in meters
 #define PI 3.1415								//defining pi
-#define pwmConversion 10
+#define pwmConversion 100
 #define motorDeadzone 50
 
 uint8_t pwmmotor1=1;											//creating uint8_t to send to arduino
@@ -85,14 +85,15 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 
 void ticksLeft( const std_msgs::Float32& ticks)
 {    
-    Pos1 = -1*(ticks.data*(WheelDiameter*PI)/39*20); //based on encoder value
-    //ROS_INFO("Speed left: %f ",ticks.data);
+    Pos1 = (ticks.data*(WheelDiameter*PI)/39*20); //based on encoder value
+    Pos2 = (ticks.data*(WheelDiameter*PI)/39*20);
+    ROS_INFO("Speed left: %f ",ticks.data);
     
 }
 
 void ticksRight( const std_msgs::Float32& ticks1)
 {	
-   Pos2 = -1*(ticks1.data*(WheelDiameter*PI)/39*20); //based on encoder value
+   //Pos2 = (ticks1.data*(WheelDiameter*PI)/39*20); //based on encoder value
    //ROS_INFO("Speed right: %f ",ticks1.data);
 }
 
@@ -212,7 +213,7 @@ int main(int argc, char **argv)
 		phi_velocity = (Pos1-Pos2)/(2*WheelSpacing);
 		//end of calculations of odometry
 		//creating an odometry message
-		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(-0.5*PI+phi);    
+		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(-0.5*PI+phi);    //-0.5*PI+phi
 		
 		geometry_msgs::TransformStamped odom_trans;
 		odom_trans.header.stamp = current_time;
@@ -244,7 +245,9 @@ int main(int argc, char **argv)
 		//kinematic calculations 
        // if (autonomeus_drive == true)
         //{
-		pwmmotor2 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)-0.5*WheelSpacing*cmdAngZ)/(WheelDiameter*0.5);
+		pwmmotor2 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		//Pos2 = pwmmotor2;
+		ROS_INFO("Speed right: %f ",Pos2);
 		if (pwmmotor2 <0){
 		pwmmotor2 *= -1;
 		pwmmotor2 += motorDeadzone;
@@ -253,7 +256,9 @@ int main(int argc, char **argv)
 		pwmmotor2 += motorDeadzone;
 		pwmmotor4 = pwmmotor2;
 		
-		pwmmotor1 = 2*(sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY))/(0.5*WheelDiameter);
+		pwmmotor1 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		//Pos1 = pwmmotor1;
+		ROS_INFO("Speed left: %f ",Pos2);
 		if (pwmmotor1 <0){
 		pwmmotor1 *= -1;
 		pwmmotor1 += motorDeadzone;
@@ -280,8 +285,7 @@ int main(int argc, char **argv)
 		
 		
 		
-		
-
+	
 		
          
 		//end of variables declaration
