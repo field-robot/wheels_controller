@@ -85,8 +85,8 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 
 void ticksLeft( const std_msgs::Float32& ticks)
 {    
-    Pos1 = (ticks.data*(WheelDiameter*PI)/39*20); //based on encoder value
-    Pos2 = (ticks.data*(WheelDiameter*PI)/39*20);
+    //Pos1 = (ticks.data*(WheelDiameter*PI)/39*20); //based on encoder value
+   
     ROS_INFO("Speed left: %f ",ticks.data);
     
 }
@@ -94,7 +94,7 @@ void ticksLeft( const std_msgs::Float32& ticks)
 void ticksRight( const std_msgs::Float32& ticks1)
 {	
    //Pos2 = (ticks1.data*(WheelDiameter*PI)/39*20); //based on encoder value
-   //ROS_INFO("Speed right: %f ",ticks1.data);
+   ROS_INFO("Speed right: %f ",ticks1.data);
 }
 
 void arduinoError( const std_msgs::UInt8& error)
@@ -245,11 +245,13 @@ int main(int argc, char **argv)
 		//kinematic calculations 
        // if (autonomeus_drive == true)
         //{
+        
 		pwmmotor2 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
-		//Pos2 = pwmmotor2;
+		Pos2 = pwmmotor2/pwmConversion;
+		ROS_INFO("Pos2: %f ",Pos2);
 		ROS_INFO("Speed right: %f ",Pos2);
-		if (pwmmotor2 <0){
-		pwmmotor2 *= -1;
+		if (cmdLinX <0){
+		
 		pwmmotor2 += motorDeadzone;
 		dir_r = true;
 		}else dir_r = false;
@@ -257,10 +259,10 @@ int main(int argc, char **argv)
 		pwmmotor4 = pwmmotor2;
 		
 		pwmmotor1 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
-		//Pos1 = pwmmotor1;
-		ROS_INFO("Speed left: %f ",Pos2);
-		if (pwmmotor1 <0){
-		pwmmotor1 *= -1;
+		Pos1 = pwmmotor1/pwmConversion;
+		ROS_INFO("Speed left: %f ",Pos1);
+		if (cmdLinX <0){
+		
 		pwmmotor1 += motorDeadzone;
 		dir_l = true;
 		}else dir_l = false;
