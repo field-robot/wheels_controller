@@ -86,9 +86,7 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 void ticksLeft( const std_msgs::Float32& ticks)
 {    
     Pos1 = (ticks.data*(WheelDiameter*PI)/39*20); //based on encoder value
-   
     ROS_INFO("Speed left: %f ",ticks.data);
-    
 }
 
 void ticksRight( const std_msgs::Float32& ticks1)
