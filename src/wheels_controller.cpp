@@ -85,7 +85,7 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 
 void ticksLeft( const std_msgs::Float32& ticks)
 {    
-    //Pos1 = (ticks.data*(WheelDiameter*PI)/39*20); //based on encoder value
+    Pos1 = (ticks.data*(WheelDiameter*PI)/39*20); //based on encoder value
    
     ROS_INFO("Speed left: %f ",ticks.data);
     
@@ -93,7 +93,7 @@ void ticksLeft( const std_msgs::Float32& ticks)
 
 void ticksRight( const std_msgs::Float32& ticks1)
 {	
-   //Pos2 = (ticks1.data*(WheelDiameter*PI)/39*20); //based on encoder value
+   Pos2 = (ticks1.data*(WheelDiameter*PI)/39*20); //based on encoder value
    ROS_INFO("Speed right: %f ",ticks1.data);
 }
 
@@ -247,8 +247,7 @@ int main(int argc, char **argv)
         //{
         
 		pwmmotor2 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
-		Pos2 = pwmmotor2/pwmConversion;
-		ROS_INFO("Pos2: %f ",Pos2);
+	
 		ROS_INFO("Speed right: %f ",Pos2);
 		if (cmdLinX <0){
 		
@@ -259,8 +258,7 @@ int main(int argc, char **argv)
 		pwmmotor4 = pwmmotor2;
 		
 		pwmmotor1 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
-		Pos1 = pwmmotor1/pwmConversion;
-		ROS_INFO("Speed left: %f ",Pos1);
+	
 		if (cmdLinX <0){
 		
 		pwmmotor1 += motorDeadzone;
