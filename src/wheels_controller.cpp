@@ -25,13 +25,19 @@ uint8_t pwm_m2_prev;
 uint8_t pwm_m3_prev;
 uint8_t pwm_m4_prev;
 
+int Pos1;
+int Pos2;
 
-double Pos1 =0;												//creating Pos1 which is the center of the distance between left front and back wheels
-double Pos2=0;												//creating Pos2 which is the center of the distance between right front and back wheels
+ros::Time     lastE1update;
+ros::Time     lastE2update;
+double lastE1ticks;
+double lastE2ticks;
+double W1 =0;												//creating Pos1 which is the center of the distance between left front and back wheels
+double W2=0;												//creating Pos2 which is the center of the distance between right front and back wheels
 double lticksprev;											//creating a variable which will be the previous value of the encoders
 double rticksprev;											
-double Xprev;												//creating a variable which will be the previous x value
-double Yprev;												//creating a variable which will be the previous y value
+double Xprev = 0;												//creating a variable which will be the previous x value
+double Yprev = 0;												//creating a variable which will be the previous y value
 double X = 0;													//creating a variable which will be the x value
 double Y = 0;													//creating a variable which will be the y value
 double x_velocity =0;											//creating a variable which will be the velocity in x-direction
@@ -85,14 +91,24 @@ void pwm_motor4( const std_msgs::UInt8& pwmvalue)
 
 void ticksLeft( const std_msgs::Float32& ticks)
 {    
-    Pos1 = (ticks.data*(WheelDiameter*PI)/39*20); //based on encoder value
-    ROS_INFO("Speed left: %f ",ticks.data);
+	ros::Time current_time_ = ros::Time::now();
+	double dtE1 = (current_time_ - lastE1update).toSec();
+	double deltaE1Ticks = lastE1ticks - ticks.data;
+    W1 = deltaE1Ticks/39*2*3.1415/dtE1; // [rad/s] based on encoder value
+    lastE1update = current_time_;
+    lastE1ticks = ticks.data;
+    ROS_INFO("Speed left: %f dt: %f, ticks: %f",W1,dtE1,ticks.data);
 }
 
 void ticksRight( const std_msgs::Float32& ticks1)
 {	
-   Pos2 = (ticks1.data*(WheelDiameter*PI)/39*20); //based on encoder value
-   ROS_INFO("Speed right: %f ",ticks1.data);
+	ros::Time current_time_ = ros::Time::now();
+	double dtE2 = (current_time_ - lastE2update).toSec();
+	double deltaE2Ticks = lastE2ticks - ticks1.data;
+    W2 = -deltaE2Ticks/39*2*3.1415/dtE2; // [rad/s] based on encoder value
+    lastE2update = current_time_;
+        lastE2ticks = ticks1.data;
+    ROS_INFO("Speed right: %f ",W2);
 }
 
 void arduinoError( const std_msgs::UInt8& error)
@@ -103,19 +119,18 @@ void arduinoError( const std_msgs::UInt8& error)
 void directionLeft( const std_msgs::Bool& dir)
 {
 	dir_l = dir.data;
-	if (dir.data == true) Pos1*=-1;
+	if (dir.data == true) W1*=-1;
 }
 
 void directionRight( const std_msgs::Bool& dir)
 {
 	dir_r = dir.data;
-	if (dir.data == true) Pos2*=-1;
+	if (dir.data == true) W2*=-1;
 }
 
 void cmdVel( const geometry_msgs::Twist& twist)
 {
 	cmdLinX = twist.linear.x;
-	cmdLinY = twist.linear.y;
 	cmdAngZ = twist.angular.z;
 	
 }
@@ -149,7 +164,7 @@ int main(int argc, char **argv)
 	ros::Publisher send_dir_motor2 = nh.advertise<std_msgs::Bool>("direction_motor2",1);
 	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",1);
 	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",1);
-	ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 200);							//odometry publisher init
+	ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 100);							//odometry publisher init
 	
 	tf::TransformBroadcaster odom_broadcaster;													// tf transform broadcaster init
 	
@@ -186,12 +201,25 @@ int main(int argc, char **argv)
 	while (ros::ok())
 	{
         current_time = ros::Time::now();
-
+        dt = (current_time-last_time).toSec();
+		double vrobot,wrobot;
 		//calculating odometry of the robot
 		
 		//if ((Pos1-Pos2)/(2*WheelSpacing) != phi_prev)
 		//{
-			phi = (Pos1-Pos2)/(2*WheelSpacing)+phi_prev;
+		vrobot = (WheelDiameter/2)*(W1+W2)/2;
+
+		wrobot = (WheelDiameter/2)*(W1-W2)/(WheelSpacing);
+		phi = wrobot*dt + phi_prev;
+		x_velocity = vrobot*cos(phi);
+		y_velocity= vrobot*sin(phi);
+		phi_prev = wrobot*dt + phi_prev;
+		X = x_velocity*dt + Xprev;
+		ROS_INFO("X: %f x_vel: %f x_prev: %f",X,x_velocity,Xprev);
+		Xprev = X;
+		Y = y_velocity*dt + Yprev;
+		Yprev = Y;
+			/*phi = (Pos1-Pos2)/(2*WheelSpacing)+phi_prev;
 			phi_prev = (Pos1-Pos2)/(2*WheelSpacing)+phi_prev;
 		//}
 		
@@ -208,10 +236,10 @@ int main(int argc, char **argv)
 		//}
 		x_velocity = (Pos1+Pos2)/2*cos(phi);
 		y_velocity = (Pos1+Pos2)/2*sin(phi);
-		phi_velocity = (Pos1-Pos2)/(2*WheelSpacing);
+		phi_velocity = (Pos1-Pos2)/(2*WheelSpacing);*/
 		//end of calculations of odometry
 		//creating an odometry message
-		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(-0.5*PI+phi);    //-0.5*PI+phi
+		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(-0.5*PI);    //-0.5*PI+phi
 		
 		geometry_msgs::TransformStamped odom_trans;
 		odom_trans.header.stamp = current_time;
@@ -230,6 +258,7 @@ int main(int argc, char **argv)
 		odom.child_frame_id = "base_link";
 		
 		odom.pose.pose.position.x = X;
+
 		odom.pose.pose.position.y = Y;
 		odom.pose.pose.position.z = 0.0;
 		odom.pose.pose.orientation = odom_quat;
@@ -244,9 +273,9 @@ int main(int argc, char **argv)
        // if (autonomeus_drive == true)
         //{
         
-		pwmmotor2 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		pwmmotor2 = (cmdLinX-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
 	
-		ROS_INFO("Speed right: %f ",Pos2);
+		//ROS_INFO("Speed right: %f ",Pos2);
 		if (cmdLinX <0){
 		
 		pwmmotor2 += motorDeadzone;
@@ -255,7 +284,7 @@ int main(int argc, char **argv)
 		pwmmotor2 += motorDeadzone;
 		pwmmotor4 = pwmmotor2;
 		
-		pwmmotor1 = (sqrt(cmdLinX*cmdLinX+cmdLinY*cmdLinY)-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		pwmmotor1 = (cmdLinX+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
 	
 		if (cmdLinX <0){
 		
@@ -264,14 +293,14 @@ int main(int argc, char **argv)
 		}else dir_l = false;
 		pwmmotor1 += motorDeadzone;
         pwmmotor3 = pwmmotor1;
-        if (cmdLinX == 0 && cmdLinY == 0 && cmdAngZ == 0)
+        if (cmdLinX == 0 && cmdAngZ == 0)
 		{
 			pwmmotor1 = 0;
 			pwmmotor2 = 0;
 			pwmmotor3 = 0;
 			pwmmotor4 = 0;
 		}
-        //}
+        //
 		//end calculations
 		//creating variables to send/receive
 		
