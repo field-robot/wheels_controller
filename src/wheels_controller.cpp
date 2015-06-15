@@ -45,7 +45,7 @@ double y_velocity =0;											//creating a variable which will be the velocity
 
 
 double phi = 0;										//creating a variable whih will be the rotation on the z-axis.this will start at 90 degrees
-double phi_prev = 0;										//creating a variable which will be the previous phi value									
+double phi_prev = -0.5*3.1415;										//creating a variable which will be the previous phi value									
 double phi_velocity;										//creating a variable which will be the velocity of 
 double dt;
 bool dir_l = true;
@@ -93,7 +93,7 @@ void ticksLeft( const std_msgs::Float32& ticks)
 {    
 	ros::Time current_time_ = ros::Time::now();
 	double dtE1 = (current_time_ - lastE1update).toSec();
-	double deltaE1Ticks = lastE1ticks - ticks.data;
+	double deltaE1Ticks = ticks.data-lastE1ticks;
     W1 = deltaE1Ticks/39*2*3.1415/dtE1; // [rad/s] based on encoder value
     lastE1update = current_time_;
     lastE1ticks = ticks.data;
@@ -104,8 +104,8 @@ void ticksRight( const std_msgs::Float32& ticks1)
 {	
 	ros::Time current_time_ = ros::Time::now();
 	double dtE2 = (current_time_ - lastE2update).toSec();
-	double deltaE2Ticks = lastE2ticks - ticks1.data;
-    W2 = -deltaE2Ticks/39*2*3.1415/dtE2; // [rad/s] based on encoder value
+	double deltaE2Ticks =ticks1.data - lastE2ticks;
+    W2 = deltaE2Ticks/39*2*3.1415/dtE2*-1; // [rad/s] based on encoder value
     lastE2update = current_time_;
         lastE2ticks = ticks1.data;
     ROS_INFO("Speed right: %f ",W2);
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
        // if (autonomeus_drive == true)
         //{
         
-		pwmmotor2 = (cmdLinX-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		pwmmotor2 = (cmdLinX+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
 	
 		//ROS_INFO("Speed right: %f ",Pos2);
 		if (cmdLinX <0){
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
 		pwmmotor2 += motorDeadzone;
 		pwmmotor4 = pwmmotor2;
 		
-		pwmmotor1 = (cmdLinX+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		pwmmotor1 = (cmdLinX-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
 	
 		if (cmdLinX <0){
 		
