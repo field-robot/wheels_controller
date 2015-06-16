@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 		phi_velocity = (Pos1-Pos2)/(2*WheelSpacing);*/
 		//end of calculations of odometry
 		//creating an odometry message
-		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(-0.5*PI);    //-0.5*PI+phi
+		geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);    //-0.5*PI+phi
 		
 		geometry_msgs::TransformStamped odom_trans;
 		odom_trans.header.stamp = current_time;
@@ -255,10 +255,9 @@ int main(int argc, char **argv)
 		nav_msgs::Odometry odom;
 		odom.header.stamp = current_time;
 		odom.header.frame_id = "odom";
-		odom.child_frame_id = "base_link";
+		//odom.child_frame_id = "base_link";
 		
 		odom.pose.pose.position.x = X;
-
 		odom.pose.pose.position.y = Y;
 		odom.pose.pose.position.z = 0.0;
 		odom.pose.pose.orientation = odom_quat;
@@ -273,7 +272,7 @@ int main(int argc, char **argv)
        // if (autonomeus_drive == true)
         //{
         
-		pwmmotor2 = (cmdLinX+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		pwmmotor2 =  (cmdLinX)+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
 	
 		//ROS_INFO("Speed right: %f ",Pos2);
 		if (cmdLinX <0){
@@ -284,7 +283,7 @@ int main(int argc, char **argv)
 		pwmmotor2 += motorDeadzone;
 		pwmmotor4 = pwmmotor2;
 		
-		pwmmotor1 = (cmdLinX-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		pwmmotor1 = (cmdLinX)-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
 	
 		if (cmdLinX <0){
 		
