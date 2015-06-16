@@ -272,7 +272,7 @@ int main(int argc, char **argv)
        // if (autonomeus_drive == true)
         //{
         
-		pwmmotor2 =  (cmdLinX)+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		pwmmotor2 =  (cmdLinX+0.5*WheelSpacing*cmdAngZ)*pwmConversion;
 	
 		//ROS_INFO("Speed right: %f ",Pos2);
 		if (cmdLinX <0){
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
 		pwmmotor2 += motorDeadzone;
 		pwmmotor4 = pwmmotor2;
 		
-		pwmmotor1 = (cmdLinX)-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
+		pwmmotor1 = (cmdLinX-0.5*WheelSpacing*cmdAngZ)*pwmConversion;
 	
 		if (cmdLinX <0){
 		
