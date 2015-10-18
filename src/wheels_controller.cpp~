@@ -184,7 +184,7 @@ int main(int argc, char **argv)
 	ros::Publisher send_dir_motor2 = nh.advertise<std_msgs::Bool>("direction_motor2",1);
 	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",1);
 	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",1);
-	ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom_test", 100);					//odometry publisher init
+	ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 100);					//odometry publisher init
 	
 	tf::TransformBroadcaster odom_broadcaster;													// tf transform broadcaster init
 	
@@ -230,11 +230,11 @@ int main(int argc, char **argv)
 	Xprev = X;
 	Y = y_velocity*dt + Yprev;
 	Yprev = Y;
-	geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);    //-0.5*PI+phi
+	geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi+PI);    //-0.5*PI+phi
 		
 	geometry_msgs::TransformStamped odom_trans;
 	odom_trans.header.stamp = current_time;
-	odom_trans.header.frame_id = "odom_test";
+	odom_trans.header.frame_id = "odom";
 	odom_trans.child_frame_id = "base_link";
 	odom_trans.transform.translation.x = X;
 	odom_trans.transform.translation.y = Y;
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 		
 	nav_msgs::Odometry odom;
 	odom.header.stamp = current_time;
-	odom.header.frame_id = "odom_test";
+	odom.header.frame_id = "odom";
 		
 	odom.pose.pose.position.x = X;
 	odom.pose.pose.position.y = Y;

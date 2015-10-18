@@ -230,7 +230,7 @@ int main(int argc, char **argv)
 	Xprev = X;
 	Y = y_velocity*dt + Yprev;
 	Yprev = Y;
-	geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi);    //-0.5*PI+phi
+	geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi+0.5*PI);    //-0.5*PI+phi
 		
 	geometry_msgs::TransformStamped odom_trans;
 	odom_trans.header.stamp = current_time;
