@@ -11,7 +11,7 @@
 
 #define WheelDiameter 0.150									//defining wheel diameter in meters
 #define WheelSpacing 0.3302									//defining wheel spacing in meters
-#define PI 3.1415								//defining pi
+#define PI 3.1415											//defining pi
 #define pwmConversion 100
 #define motorDeadzone 50
 
@@ -188,10 +188,7 @@ int main(int argc, char **argv)
 	
 	tf::TransformBroadcaster odom_broadcaster;													// tf transform broadcaster init
 	
-	ros::Subscriber sub = nh.subscribe("key_speed_LF", 1, &pwm_motor1);
-	ros::Subscriber sub1 = nh.subscribe("key_speed_RF", 1, &pwm_motor2);
-	ros::Subscriber sub2 = nh.subscribe("speed_LB", 1, &pwm_motor3);
-	ros::Subscriber sub3 = nh.subscribe("speed_RB", 1, &pwm_motor4);
+
 	ros::Subscriber errorArduino = nh.subscribe("arduino_error",1, &arduinoError);
 	ros::Subscriber jointstates = nh.subscribe("joint_states",1,&jointVelocity);
 	

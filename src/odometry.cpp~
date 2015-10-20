@@ -1,0 +1,136 @@
+#include <ros/ros.h>
+#include <nav_msgs/Odometry.h>
+#include <std_msgs/Float32.h>
+#include <tf/transform_broadcaster.h>
+ros::Time current_time, last_time;
+int dt;
+#define WheelDiameter 0.150									//defining wheel diameter in meters
+#define WheelSpacing 0.3302									//defining wheel spacing in meters
+#define PI 3.1415											//defining pi
+#define pwmConversion 100
+#define motorDeadzone 50
+
+uint8_t pwmmotor1=1;											//creating uint8_t to send to arduino
+uint8_t	pwmmotor2=1;
+uint8_t pwmmotor3=1;
+uint8_t pwmmotor4=1;
+uint8_t errorMsg;
+
+uint8_t pwm_m1_prev;
+uint8_t pwm_m2_prev;
+uint8_t pwm_m3_prev;
+uint8_t pwm_m4_prev;
+
+int Pos1;
+int Pos2;
+
+ros::Time     lastE1update;
+ros::Time     lastE2update;
+double lastE1ticks;
+double lastE2ticks;
+double W1 =0;												//creating Pos1 which is the center of the distance between left front and back wheels
+double W2=0;												//creating Pos2 which is the center of the distance between right front and back wheels
+double lticksprev;											//creating a variable which will be the previous value of the encoders
+double rticksprev;											
+double Xprev = 0;												//creating a variable which will be the previous x value
+double Yprev = 0;												//creating a variable which will be the previous y value
+double X = 0;													//creating a variable which will be the x value
+double Y = 0;													//creating a variable which will be the y value
+double x_velocity =0;											//creating a variable which will be the velocity in x-direction
+double y_velocity =0;											//creating a variable which will be the velocity in y-direction
+
+double left_back_w =0;
+double left_front_w = 0;
+double right_back_w = 0;
+double right_front_w=0;
+
+double phi = 0;										//creating a variable whih will be the rotation on the z-axis.this will start at 90 degrees
+double phi_prev = -0.5*3.1415;										//creating a variable which will be the previous phi value									
+double phi_velocity;										//creating a variable which will be the velocity of 
+double dt;
+
+void ticksLeft( const std_msgs::Float32& ticks)
+{    
+	ros::Time current_time_ = ros::Time::now();
+	double dtE1 = (current_time_ - lastE1update).toSec();
+	double deltaE1Ticks = ticks.data-lastE1ticks;
+    W1 = deltaE1Ticks/39*2*3.1415/dtE1; // [rad/s] based on encoder value
+    lastE1update = current_time_;
+    lastE1ticks = ticks.data;
+    ROS_INFO("Speed left: %f dt: %f, ticks: %f",W1,dtE1,ticks.data);
+	dt = dtE1;
+}
+
+void ticksRight( const std_msgs::Float32& ticks1)
+{	
+	ros::Time current_time_ = ros::Time::now();
+	double dtE2 = (current_time_ - lastE2update).toSec();
+	double deltaE2Ticks =ticks1.data - lastE2ticks;
+    W2 = deltaE2Ticks/39*2*3.1415/dtE2*-1; // [rad/s] based on encoder value
+    lastE2update = current_time_;
+        lastE2ticks = ticks1.data;
+    ROS_INFO("Speed right: %f ",W2);
+}
+
+void publishOdom()
+{
+	      
+	double vrobot,wrobot;
+	
+	vrobot = (WheelDiameter/2)*(W1+W2)/2;
+
+	wrobot = (WheelDiameter/2)*(W1-W2)/(WheelSpacing);
+	phi = wrobot*dt + phi_prev;
+	x_velocity = vrobot*cos(phi);
+	y_velocity= vrobot*sin(phi);
+	phi_prev = wrobot*dt + phi_prev;
+	X = x_velocity*dt + Xprev;
+	//ROS_INFO("X: %f x_vel: %f x_prev: %f",X,x_velocity,Xprev);
+	Xprev = X;
+	Y = y_velocity*dt + Yprev;
+	Yprev = Y;
+	geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(phi+0.5*PI);    //-0.5*PI+phi
+		
+	geometry_msgs::TransformStamped odom_trans;
+	odom_trans.header.stamp = current_time;
+	odom_trans.header.frame_id = "odom";
+	odom_trans.child_frame_id = "base_link";
+	odom_trans.transform.translation.x = X;
+	odom_trans.transform.translation.y = Y;
+	odom_trans.transform.translation.z = 0.0;
+	odom_trans.transform.rotation = odom_quat;
+	
+	odom_broadcaster.sendTransform(odom_trans);
+		
+	nav_msgs::Odometry odom;
+	odom.header.stamp = current_time;
+	odom.header.frame_id = "odom";
+		
+	odom.pose.pose.position.x = X;
+	odom.pose.pose.position.y = Y;
+	odom.pose.pose.position.z = 0.0;
+	odom.pose.pose.orientation = odom_quat;
+	
+	odom.twist.twist.linear.x = x_velocity;
+	odom.twist.twist.linear.y = y_velocity;
+	odom.twist.twist.angular.z = phi_velocity;
+	
+	odom_pub.publish(odom);
+}
+
+
+
+int main(int argc, char **argv)
+{
+	ros::init(argc, argv, "odometry");
+	//initializing package
+	ros::NodeHandle nh;
+  ros::Subscriber encoder_left = nh.subscribe("pub_speed_left",1, &ticksLeft);
+  ros::Subscriber encoder_right = nh.subscribe("pub_speed_right",1, &ticksRight);
+
+	while (ros::ok()){
+	publishOdom();
+	ros::Spin();
+	}
+return 0;
+}
