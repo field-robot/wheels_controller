@@ -188,10 +188,7 @@ int main(int argc, char **argv)
 	
 	tf::TransformBroadcaster odom_broadcaster;													// tf transform broadcaster init
 	
-	ros::Subscriber sub = nh.subscribe("key_speed_LF", 1, &pwm_motor1);
-	ros::Subscriber sub1 = nh.subscribe("key_speed_RF", 1, &pwm_motor2);
-	ros::Subscriber sub2 = nh.subscribe("speed_LB", 1, &pwm_motor3);
-	ros::Subscriber sub3 = nh.subscribe("speed_RB", 1, &pwm_motor4);
+
 	ros::Subscriber errorArduino = nh.subscribe("arduino_error",1, &arduinoError);
 	ros::Subscriber jointstates = nh.subscribe("joint_states",1,&jointVelocity);
 	
@@ -272,12 +269,16 @@ int main(int argc, char **argv)
 		
 		
 		pwmmotor1 = left_front_w/25*255;
+		if (pwmmotor1>255)pwmmotor1 = 255;
 		ROS_INFO("PWM motor 1: %i", pwmmotor1);
 		pwmmotor2 = right_front_w/25*255;
+		if (pwmmotor2>255)pwmmotor2 = 255;
 		ROS_INFO("PWM motor 2: %i", pwmmotor2);
 		pwmmotor3 = left_back_w/25*255;
+		if (pwmmotor3>255)pwmmotor3=255;
 		ROS_INFO("PWM motor 3: %i", pwmmotor3);
 		pwmmotor4 = right_back_w/25*255;
+		if (pwmmotor4>255)pwmmotor4 = 255;
 		ROS_INFO("PWM motor 4: %i", pwmmotor4);
 	
 		
