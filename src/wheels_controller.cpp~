@@ -144,14 +144,20 @@ void directionRight( const std_msgs::Bool& dir)
 void jointVelocity( const sensor_msgs::JointState& jointstate)
 {
 	left_back_w = jointstate.velocity[0];
+
 	if (jointstate.velocity[0]<0){ dir_l = true;left_back_w*=-1;}else dir_l = false;
+	if (left_back_w > 0.1) left_back_w += 7.63;
 	ROS_INFO("Direction Left: %b",dir_l);
 	left_front_w = jointstate.velocity[1];
 	if (jointstate.velocity[1]<0){left_front_w*=-1;}
+	if (left_front_w > 0.1) left_front_w += 7.63;
 	right_back_w = jointstate.velocity[2];
 	if (jointstate.velocity[2]<0){ dir_r = false; right_back_w*=-1;}else dir_r = true;
+	if (right_back_w > 0.1) right_back_w += 7.63;
 	right_front_w = jointstate.velocity[3];
+
 	if (jointstate.velocity[3]<0){right_front_w *=-1;}
+	if (right_front_w > 0.1) right_front_w += 7.63;
 	ROS_INFO("Speed left_back: %f",left_back_w);
 }
 
@@ -269,16 +275,16 @@ int main(int argc, char **argv)
 		
 		
 		pwmmotor1 = left_front_w/25*255;
-		if (pwmmotor1>255)pwmmotor1 = 255;
+		if (pwmmotor1>250)pwmmotor1 = 250;
 		ROS_INFO("PWM motor 1: %i", pwmmotor1);
 		pwmmotor2 = right_front_w/25*255;
-		if (pwmmotor2>255)pwmmotor2 = 255;
+		if (pwmmotor2>250)pwmmotor2 = 250;
 		ROS_INFO("PWM motor 2: %i", pwmmotor2);
 		pwmmotor3 = left_back_w/25*255;
-		if (pwmmotor3>255)pwmmotor3=255;
+		if (pwmmotor3>250)pwmmotor3=250;
 		ROS_INFO("PWM motor 3: %i", pwmmotor3);
 		pwmmotor4 = right_back_w/25*255;
-		if (pwmmotor4>255)pwmmotor4 = 255;
+		if (pwmmotor4>250)pwmmotor4 = 250;
 		ROS_INFO("PWM motor 4: %i", pwmmotor4);
 	
 		
