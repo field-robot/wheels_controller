@@ -67,33 +67,7 @@ float cmdAngZ;
 
 
 
-void pwm_motor1( const std_msgs::UInt8& pwmvalue)
-{
-	pwmmotor1 = pwmvalue.data;
-	pwmmotor3 = pwmvalue.data;
-	//Pos1 = (pwmvalue.data/2)*(WheelDiameter*PI)/20; //based on pwm value
-    
-	
-}
-	
-void pwm_motor2( const std_msgs::UInt8& pwmvalue)
-{
-	pwmmotor2 = pwmvalue.data;
-	pwmmotor4 = pwmvalue.data;
-	//Pos2 = (pwmvalue.data/2)*(WheelDiameter*PI)/20; //#pwm value
-    
 
-}
-
-void pwm_motor3( const std_msgs::UInt8& pwmvalue)
-{
-	pwmmotor3 = pwmvalue.data;
-}
-
-void pwm_motor4( const std_msgs::UInt8& pwmvalue)
-{
-	pwmmotor4 = pwmvalue.data;
-}
 
 void ticksLeft( const std_msgs::Float32& ticks)
 {    
@@ -122,24 +96,7 @@ void arduinoError( const std_msgs::UInt8& error)
 	errorMsg = error.data;
 }
 
-void directionLeft( const std_msgs::Bool& dir)
-{
-	dir_l = dir.data;
-	if (dir.data == true) W1*=-1;
-}
 
-void directionRight( const std_msgs::Bool& dir)
-{
-	dir_r = dir.data;
-	if (dir.data == true) W2*=-1;
-}
-
-/*void cmdVel( const geometry_msgs::Twist& twist)
-{
-	cmdLinX = twist.linear.x;
-	cmdAngZ = twist.angular.z;
-	
-}*/
 
 void jointVelocity( const sensor_msgs::JointState& jointstate)
 {
@@ -158,7 +115,7 @@ void jointVelocity( const sensor_msgs::JointState& jointstate)
 
 	if (jointstate.velocity[3]<0){right_front_w *=-1;}
 	if (right_front_w > 0.1) right_front_w += 7.63;
-	ROS_INFO("Speed left_back: %f",left_back_w);
+	
 }
 
 void SwitchState(const std_msgs::UInt8& button)
@@ -184,12 +141,12 @@ int main(int argc, char **argv)
 	//ros::Publisher send_error = nh.advertise<std_msgs::UInt8>("arduino_error",1);
 	ros::Publisher send_pwm_motor1 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor1",1);
 	ros::Publisher send_pwm_motor2 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor2",1);
-	ros::Publisher send_pwm_motor3 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor3",1);
-	ros::Publisher send_pwm_motor4 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor4",1);
+	//ros::Publisher send_pwm_motor3 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor3",1);
+	//ros::Publisher send_pwm_motor4 = nh.advertise<std_msgs::UInt8>("sub_pwm_value_motor4",1);
 	ros::Publisher send_dir_motor1 = nh.advertise<std_msgs::Bool>("direction_motor1",1);
 	ros::Publisher send_dir_motor2 = nh.advertise<std_msgs::Bool>("direction_motor2",1);
-	ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",1);
-	ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",1);
+	//ros::Publisher send_dir_motor3 = nh.advertise<std_msgs::Bool>("direction_motor3",1);
+	//ros::Publisher send_dir_motor4 = nh.advertise<std_msgs::Bool>("direction_motor4",1);
 	ros::Publisher odom_pub = nh.advertise<nav_msgs::Odometry>("odom", 100);					//odometry publisher init
 	
 	tf::TransformBroadcaster odom_broadcaster;													// tf transform broadcaster init
@@ -197,15 +154,8 @@ int main(int argc, char **argv)
 
 	ros::Subscriber errorArduino = nh.subscribe("arduino_error",1, &arduinoError);
 	ros::Subscriber jointstates = nh.subscribe("joint_states",1,&jointVelocity);
-	
-    ros::Subscriber encoder_left = nh.subscribe("pub_speed_left",1, &ticksLeft);
-    ros::Subscriber encoder_right = nh.subscribe("pub_speed_right",1, &ticksRight);
-	
-	ros::Subscriber dirLeft = nh.subscribe("dir_L",1, &directionLeft);
-	ros::Subscriber dirRight = nh.subscribe("dir_R",1, &directionRight);
-	
-	//ros::Subscriber cmdvel = nh.subscribe("cmd_vel",1,&cmdVel);
-	
+	ros::Subscriber encoder_left = nh.subscribe("pub_speed_left",1, &ticksLeft);
+    	ros::Subscriber encoder_right = nh.subscribe("pub_speed_right",1, &ticksRight);
 	ros::Subscriber autonomeus = nh.subscribe("switching",1,&SwitchState);
 
 	ros::Time current_time, last_time;
@@ -306,7 +256,7 @@ int main(int argc, char **argv)
 			send_pwm_motor2.publish(valuemotor2);
 			pwm_m2_prev = pwmmotor2;
 		}
-		if (pwmmotor3 != pwm_m3_prev)
+		/*if (pwmmotor3 != pwm_m3_prev)
 		{
 			std_msgs::UInt8 valuemotor3;
 			valuemotor3.data = pwmmotor3;
@@ -319,20 +269,23 @@ int main(int argc, char **argv)
 			valuemotor4.data = pwmmotor4;
 			send_pwm_motor4.publish(valuemotor4);
 			pwm_m4_prev = pwmmotor4;
-		}
-		
+		}*/
+		if (dir_l != dir_l_prev)
+			{
 			std_msgs::Bool  dir;
 			dir.data = dir_l;
 			send_dir_motor1.publish(dir);
-            send_dir_motor3.publish(dir);
+            		//send_dir_motor3.publish(dir);
 			dir_l_prev = dir_l;
-		
-		
+			}
+		if(dir_r != dir_r_prev)
+			{
 			std_msgs::Bool  dir1;
 			dir1.data = dir_r;
 			send_dir_motor2.publish(dir1);
-            send_dir_motor4.publish(dir1);
+            		//send_dir_motor4.publish(dir1);
 			dir_r_prev = dir_r;
+			}
 		
 
 		
